@@ -1,9 +1,5 @@
 # openFrameworks → Web (WebAssembly) on GitHub Pages
 
-This repository builds an [openFrameworks](https://openframeworks.cc/) sketch into
-**WebAssembly** with [Emscripten](https://emscripten.org/) and publishes it as a live
-web page using **GitHub Pages** — automatically, every time you push.
-
 You write normal openFrameworks C++. You push to GitHub. A few minutes later your
 sketch is running in the browser at a public URL. No local toolchain, no manual build.
 
@@ -108,7 +104,7 @@ There are two easy ways to get the workflow into your own project.
 
 ## Enabling GitHub Pages (one-time)
 
-The workflow builds your page on every push, but GitHub won't *publish* it until you
+The workflow builds your page on every push, but GitHub won't _publish_ it until you
 turn Pages on and point it at GitHub Actions. Do this once per repo:
 
 1. Go to your repo → **Settings** → **Pages**.
@@ -128,11 +124,11 @@ https://<your-github-username>.github.io/<your-repo-name>/
 
 ## Controls in the demo
 
-| Key / action        | What it does                                         |
-|---------------------|------------------------------------------------------|
-| **`f`**             | Toggle fullscreen                                    |
-| **“Fullscreen” button** | Same as `f` (built into the page)                |
-| **`r`**             | Restart the sketch (re-randomizes the movers)        |
+| Key / action            | What it does                                  |
+| ----------------------- | --------------------------------------------- |
+| **`f`**                 | Toggle fullscreen                             |
+| **“Fullscreen” button** | Same as `f` (built into the page)             |
+| **`r`**                 | Restart the sketch (re-randomizes the movers) |
 
 Fullscreen in the browser has to be triggered by a real user action (a key press or
 click) and routed through Emscripten — you can't force it from code at startup.
@@ -201,17 +197,17 @@ The final page lives (inside the build) at
 Open the **Actions** tab, click the failing run, and read the logs — the error is
 almost always in the **“Build the sketch for the web”** step.
 
-| Symptom | Likely cause & fix |
-|---|---|
-| **Build fails with C++ compile errors** | A bug in *your* `src/` code, or an API that doesn't exist in oF 0.12.1. Fix the code the compiler points at. |
-| **Build fails, but compiles fine on your desktop** | You're probably on a different openFrameworks version locally. Match 0.12.1, or pin the workflow to your version (see Advanced). |
-| **Page is blank / stuck on “Downloading…”** | Open the browser's **developer console** (F12) for the real error. Often a missing asset path or a crash in `setup()`. |
-| **Assets (images/fonts/sounds) don't load** | They must be in `bin/data/` and loaded with relative paths. Confirm the file is committed and the name/case matches exactly. |
-| **Fullscreen does nothing** | It must be triggered by a key/click (try `f` or the button), not called automatically. If you customized this, see `toggleFullscreen()`. |
-| **Deploy step fails** | GitHub Pages isn't enabled, or isn't set to “GitHub Actions.” Do the [one-time setup](#enabling-github-pages-one-time). |
-| **Page reloads itself once on first visit** | Expected — `coi-serviceworker` installs, then reloads so the threading headers apply. |
-| **Addons don't work** | The workflow doesn't copy `addons.make` by default. See Advanced. |
-| **Build takes ~10–15 minutes** | Normal — it compiles all of openFrameworks from scratch each run. See caching in Advanced. |
+| Symptom                                            | Likely cause & fix                                                                                                                       |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Build fails with C++ compile errors**            | A bug in _your_ `src/` code, or an API that doesn't exist in oF 0.12.1. Fix the code the compiler points at.                             |
+| **Build fails, but compiles fine on your desktop** | You're probably on a different openFrameworks version locally. Match 0.12.1, or pin the workflow to your version (see Advanced).         |
+| **Page is blank / stuck on “Downloading…”**        | Open the browser's **developer console** (F12) for the real error. Often a missing asset path or a crash in `setup()`.                   |
+| **Assets (images/fonts/sounds) don't load**        | They must be in `bin/data/` and loaded with relative paths. Confirm the file is committed and the name/case matches exactly.             |
+| **Fullscreen does nothing**                        | It must be triggered by a key/click (try `f` or the button), not called automatically. If you customized this, see `toggleFullscreen()`. |
+| **Deploy step fails**                              | GitHub Pages isn't enabled, or isn't set to “GitHub Actions.” Do the [one-time setup](#enabling-github-pages-one-time).                  |
+| **Page reloads itself once on first visit**        | Expected — `coi-serviceworker` installs, then reloads so the threading headers apply.                                                    |
+| **Addons don't work**                              | The workflow doesn't copy `addons.make` by default. See Advanced.                                                                        |
+| **Build takes ~10–15 minutes**                     | Normal — it compiles all of openFrameworks from scratch each run. See caching in Advanced.                                               |
 
 ---
 
@@ -259,7 +255,7 @@ comfortable with the basics.
 
 **Do I need to install anything on my computer?**
 No. You can edit files directly on GitHub if you want. For comfortable local
-development, install openFrameworks 0.12.1 and use your normal IDE — but the *web*
+development, install openFrameworks 0.12.1 and use your normal IDE — but the _web_
 build only ever happens on GitHub's servers.
 
 **Can I test locally before pushing?**

@@ -145,6 +145,20 @@ jobs:
           grep -nE "fullscreenButton|canvas:fullscreen|emscripten_border" "$OUT/index.html" | head
           ls -la "$OUT"
 
+      - name: Publish the uploader page
+        run: |
+          OUT=of/apps/myApps/sketch/bin/em/sketch
+          if [ -d sketch/web/uploader ]; then
+            mkdir -p "$OUT/uploader"
+            cp -r sketch/web/uploader/. "$OUT/uploader/"
+            # bundle the CURRENT workflow so repos created by the uploader get all the fixes
+            B64=$(base64 -w0 sketch/.github/workflows/web.yml)
+            printf 'window.__WEB_YML_B64__=%s;\n' "\"$B64\"" > "$OUT/uploader/workflow.js"
+            echo "uploader published:"; ls -la "$OUT/uploader"
+          else
+            echo "no web/uploader directory in this repo; skipping"
+          fi
+
       - name: Package the web page
         uses: actions/upload-pages-artifact@v5
         with:

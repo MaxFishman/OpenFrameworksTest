@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Publish your openFrameworks sketch</title>
+<!-- Generated at build time: window.__WEB_YML_B64__ = the current web.yml, so student
+     repos always get the up-to-date workflow. Loaded defensively (may be absent in dev). -->
+<script src="workflow.js"></script>
+<style>
+  :root{
+    --bg:#0e0e13; --panel:#16161d; --panel-2:#1d1d26; --line:#2a2a36;
+    --ink:#f3f1ee; --muted:#9a98a6; --faint:#6b6a78;
+    --accent:#ff3d6e; --accent-2:#57e389; --accent-ink:#1a0710;
+    --radius:14px; --maxw:640px;
+    font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);min-height:100%}
+  body{line-height:1.5;-webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(255,61,110,.14), transparent 60%),
+      radial-gradient(800px 500px at 10% 110%, rgba(87,227,141,.10), transparent 55%),
+      var(--bg);}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:40px 22px 80px}
+  header.hero{margin:18px 0 30px}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
+    font-weight:700;margin:0 0 14px}
+  h1{font-size:clamp(30px,6vw,46px);line-height:1.04;margin:0 0 14px;font-weight:800;letter-spacing:-.02em}
+  h1 .pop{color:var(--accent)}
+  .lede{color:var(--muted);font-size:17px;margin:0;max-width:52ch}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px;margin:16px 0}
+  .step-no{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+    border-radius:50%;background:var(--panel-2);border:1px solid var(--line);
+    font-size:13px;font-weight:700;color:var(--muted);margin-right:10px;flex:none}
+  .step-head{display:flex;align-items:center;font-weight:700;font-size:16px;margin:0 0 4px}
+  .step-sub{color:var(--muted);font-size:14px;margin:0 0 16px 36px}
+  button,.btn{font:inherit;font-weight:700;border-radius:11px;cursor:pointer;border:1px solid transparent;
+    padding:12px 18px;transition:transform .05s ease,background .15s ease,border-color .15s ease,opacity .15s}
+  button:active,.btn:active{transform:translateY(1px)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .btn-primary{background:var(--accent);color:var(--accent-ink)}
+  .btn-primary:hover:not(:disabled){background:#ff5a84}
+  .btn-ghost{background:var(--panel-2);color:var(--ink);border-color:var(--line)}
+  .btn-ghost:hover:not(:disabled){border-color:#3a3a48}
+  .gh-btn{display:inline-flex;align-items:center;gap:10px}
+  .gh-btn svg{width:20px;height:20px;fill:currentColor}
+  label.field{display:block;font-size:13px;color:var(--muted);font-weight:600;margin:0 0 7px}
+  input[type=text]{width:100%;padding:12px 14px;border-radius:11px;background:var(--panel-2);
+    border:1px solid var(--line);color:var(--ink);font:inherit}
+  input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  .hint{font-size:12.5px;color:var(--faint);margin:7px 0 0}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .drop{border:1.5px dashed var(--line);border-radius:12px;padding:22px;text-align:center;
+    background:var(--panel-2);transition:border-color .15s,background .15s;cursor:pointer}
+  .drop.over{border-color:var(--accent);background:rgba(255,61,110,.07)}
+  .drop strong{color:var(--ink)}
+  .drop .sub{display:block;color:var(--faint);font-size:12.5px;margin-top:5px}
+  .files{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .files li{display:flex;align-items:center;gap:10px;font-size:13.5px;background:var(--panel-2);
+    border:1px solid var(--line);border-radius:9px;padding:8px 11px}
+  .files .path{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink)}
+  .files .tag{margin-left:auto;font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
+  .files .rm{margin-left:8px;background:none;border:0;color:var(--faint);padding:2px 6px;font-size:16px;line-height:1}
+  .files .rm:hover{color:var(--accent)}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .who{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+  .who img{width:28px;height:28px;border-radius:50%;border:1px solid var(--line)}
+  .who b{color:var(--ink)}
+  .log{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
+    background:#0b0b10;border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin-top:4px}
+  .log div{padding:2px 0;color:var(--muted)}
+  .log div.ok::before{content:"✓ ";color:var(--accent-2)}
+  .log div.run::before{content:"• ";color:var(--accent)}
+  .log div.err{color:#ff8098}
+  .links a{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin-top:9px}
+  .links a:hover{border-color:var(--accent)}
+  .links .lbl{font-weight:700}
+  .links .url{margin-left:auto;color:var(--faint);font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
+  .notice{background:rgba(255,61,110,.08);border:1px solid rgba(255,61,110,.35);color:#ffd4df;
+    border-radius:12px;padding:14px 16px;font-size:14px}
+  .notice code{background:rgba(0,0,0,.35);padding:1px 6px;border-radius:5px}
+  .muted{color:var(--muted)} .hidden{display:none}
+  footer{margin-top:40px;color:var(--faint);font-size:12.5px;text-align:center}
+  footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">openFrameworks → the web</p>
+    <h1>Put your sketch <span class="pop">online</span> in one click.</h1>
+    <p class="lede">Drop in your openFrameworks source files. This sets up a GitHub repository
+      on your account that builds your sketch to WebAssembly and publishes it at a public link —
+      no compilers, no command line.</p>
+  </header>
+
+  <!-- shown if the app hasn't been configured with an OAuth client id / proxy yet -->
+  <div id="setupNotice" class="card hidden">
+    <div class="notice">
+      <strong>Not configured yet.</strong> The teacher needs to set <code>CLIENT_ID</code> and
+      <code>PROXY_URL</code> in <code>web/uploader/index.html</code>. See <code>SETUP.md</code>.
+    </div>
+  </div>
+
+  <!-- STEP 1: sign in -->
+  <section id="stepAuth" class="card hidden">
+    <div class="step-head"><span class="step-no">1</span> Connect GitHub</div>
+    <p class="step-sub">We'll ask GitHub for permission to create one public repository for you.
+      Your sketch is yours — you can delete it anytime.</p>
+    <div style="margin-left:36px">
+      <button class="btn-primary gh-btn" id="signIn">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        Sign in with GitHub
+      </button>
+    </div>
+  </section>
+
+  <!-- STEP 2+3: build the project -->
+  <section id="stepForm" class="card hidden">
+    <div class="row" style="justify-content:space-between;margin-bottom:18px">
+      <div class="who"><img id="avatar" alt=""><span>Signed in as <b id="login"></b></span></div>
+      <button class="btn-ghost" id="signOut" style="padding:8px 12px;font-size:13px">Sign out</button>
+    </div>
+
+    <div class="step-head"><span class="step-no">2</span> Name your project</div>
+    <p class="step-sub">This becomes your repository name and part of your live URL.</p>
+    <div style="margin-left:36px;margin-bottom:24px">
+      <label class="field" for="repoName">Repository name</label>
+      <input type="text" id="repoName" value="my-of-sketch" autocomplete="off" spellcheck="false">
+      <p class="hint">Live at <span class="mono" id="urlPreview">https://you.github.io/my-of-sketch/</span></p>
+    </div>
+
+    <div class="step-head"><span class="step-no">3</span> Add your files</div>
+    <p class="step-sub">Your <span class="mono">src</span> files (.cpp / .h / .hpp). Optionally add
+      images, fonts or sounds — those go into <span class="mono">bin/data</span>.</p>
+    <div style="margin-left:36px">
+      <div class="drop" id="dropSrc">
+        <strong>Drop source files here</strong>, or click to choose
+        <span class="sub">.cpp .h .hpp .cc .cxx → src/</span>
+      </div>
+      <div class="drop" id="dropData" style="margin-top:10px">
+        <strong>Drop data files here</strong> (optional)
+        <span class="sub">images, fonts, sounds → bin/data/</span>
+      </div>
+      <ul class="files" id="fileList"></ul>
+      <input type="file" id="pickSrc" multiple class="hidden">
+      <input type="file" id="pickData" multiple class="hidden">
+    </div>
+
+    <div class="row" style="margin:24px 0 0 36px">
+      <button class="btn-primary" id="publish" disabled>Create my project</button>
+      <span class="hint" id="publishHint">Add at least one source file.</span>
+    </div>
+  </section>
+
+  <!-- working / result -->
+  <section id="stepWork" class="card hidden">
+    <div class="step-head" id="workTitle"><span class="step-no">●</span> Building your project…</div>
+    <div class="log" id="log"></div>
+    <div class="links" id="links"></div>
+    <div class="row" id="againRow" style="margin-top:18px"></div>
+  </section>
+
+  <footer>
+    Made for the course · builds with openFrameworks 0.12.1 + Emscripten ·
+    <a href="../">see the demo sketch</a>
+  </footer>
+</div>
+
+<script>
+/* ========================================================================
+   CONFIG — the teacher fills these in (see SETUP.md). CLIENT_ID is public.
+   ======================================================================== */
+const CONFIG = {
+  CLIENT_ID: "PASTE_OAUTH_CLIENT_ID",
+  PROXY_URL: "PASTE_WORKER_URL",          // e.g. https://of-oauth.<name>.workers.dev
+  SCOPES: "public_repo workflow",
+};
+
+const GH = "https://api.github.com";
+const $ = s => document.querySelector(s);
+const show = (el, on=true) => $(el).classList.toggle("hidden", !on);
+const configured = () => !CONFIG.CLIENT_ID.startsWith("PASTE") && !CONFIG.PROXY_URL.startsWith("PASTE");
+
+let token = sessionStorage.getItem("gh_token") || null;
+let me = null;                 // {login, avatar_url}
+const files = [];              // {path, b64, kind}
+
+/* ---------- OAuth ---------- */
+function redirectUri(){ return location.origin + location.pathname; }
+function signIn(){
+  const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  sessionStorage.setItem("gh_state", state);
+  const u = new URL("https://github.com/login/oauth/authorize");
+  u.searchParams.set("client_id", CONFIG.CLIENT_ID);
+  u.searchParams.set("redirect_uri", redirectUri());
+  u.searchParams.set("scope", CONFIG.SCOPES);
+  u.searchParams.set("state", state);
+  location.href = u.toString();
+}
+function signOut(){ token=null; me=null; sessionStorage.removeItem("gh_token"); render(); }
+
+async function handleRedirect(){
+  const p = new URLSearchParams(location.search);
+  const code = p.get("code"), state = p.get("state");
+  if(!code) return;
+  history.replaceState({}, "", redirectUri());   // clean the URL
+  if(state !== sessionStorage.getItem("gh_state")){ alert("Sign-in check failed, please try again."); return; }
+  try{
+    const r = await fetch(`${CONFIG.PROXY_URL}?code=${encodeURIComponent(code)}`);
+    const data = await r.json();
+    if(data.error || !data.access_token) throw new Error(data.error_description || data.error || "No token returned");
+    token = data.access_token; sessionStorage.setItem("gh_token", token);
+  }catch(e){ alert("Could not complete sign-in: " + e.message); }
+}
+
+/* ---------- GitHub API ---------- */
+async function api(path, opts={}){
+  const r = await fetch(path.startsWith("http") ? path : GH + path, {
+    ...opts,
+    headers:{ "Authorization":`Bearer ${token}`, "Accept":"application/vnd.github+json",
+      "X-GitHub-Api-Version":"2022-11-28",
+      ...(opts.body ? {"Content-Type":"application/json"} : {}), ...(opts.headers||{}) },
+  });
+  if(r.status === 204) return {};
+  const data = await r.json().catch(()=> ({}));
+  if(!r.ok){ const err = new Error(data.message || r.statusText); err.status=r.status; err.data=data; throw err; }
+  return data;
+}
+
+/* ---------- files ---------- */
+const SRC_EXT = ["cpp","h","hpp","cc","cxx","c","hh","ino","frag","vert","glsl"];
+function fileToB64(file){
+  return new Promise((res, rej)=>{ const r=new FileReader();
+    r.onload=()=>res(String(r.result).split(",")[1]); r.onerror=rej; r.readAsDataURL(file); });
+}
+async function addFiles(list, kind){
+  for(const f of list){
+    const ext = f.name.split(".").pop().toLowerCase();
+    const k = kind || (SRC_EXT.includes(ext) ? "src" : "data");
+    const path = (k==="src" ? "src/" : "bin/data/") + f.name;
+    if(files.some(x=>x.path===path)) continue;
+    files.push({ path, b64: await fileToB64(f), kind:k });
+  }
+  renderFiles();
+}
+function renderFiles(){
+  const ul = $("#fileList"); ul.innerHTML="";
+  for(const f of files){
+    const li=document.createElement("li");
+    li.innerHTML = `<span class="path">${f.path}</span><span class="tag">${f.kind}</span>
+      <button class="rm" title="Remove">×</button>`;
+    li.querySelector(".rm").onclick=()=>{ files.splice(files.indexOf(f),1); renderFiles(); };
+    ul.appendChild(li);
+  }
+  const hasSrc = files.some(f=>f.kind==="src");
+  $("#publish").disabled = !hasSrc;
+  $("#publishHint").textContent = hasSrc ? `${files.length} file${files.length>1?"s":""} ready.`
+                                         : "Add at least one source file.";
+}
+
+/* ---------- publish ---------- */
+function sanitizeName(s){
+  return (s||"").trim().toLowerCase().replace(/[^a-z0-9._-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,90) || "my-of-sketch";
+}
+function studentReadme(name){
+  return `# ${name}\n\nAn openFrameworks sketch, built to WebAssembly and published with GitHub Pages.\n\n`+
+    `- **Live site:** will appear at https://${me.login}.github.io/${name}/ once the first build finishes (watch the **Actions** tab).\n`+
+    `- **Edit your sketch:** change the files in \`src/\` and push — it rebuilds automatically.\n\n`+
+    `Created with the openFrameworks web uploader.\n`;
+}
+function logLine(cls, text){ const d=document.createElement("div"); d.className=cls; d.textContent=text; $("#log").appendChild(d); return d; }
+
+async function publish(){
+  const name = sanitizeName($("#repoName").value);
+  show("#stepForm", false); show("#stepWork", true);
+  $("#log").innerHTML=""; $("#links").innerHTML=""; $("#againRow").innerHTML="";
+  $("#workTitle").innerHTML = `<span class="step-no">●</span> Building <b style="margin-left:6px">${name}</b>…`;
+
+  const owner = me.login;
+  const web_yml = (typeof window.__WEB_YML_B64__ === "string") ? atob(window.__WEB_YML_B64__) : null;
+
+  try{
+    if(!web_yml) throw new Error("Workflow file missing (workflow.js not loaded).");
+
+    let step = logLine("run","Creating repository…");
+    await api("/user/repos", { method:"POST",
+      body: JSON.stringify({ name, private:false, auto_init:true,
+        description:"openFrameworks sketch, built for the web" }) });
+    step.className="ok"; step.textContent=`Created ${owner}/${name}`;
+
+    step = logLine("run","Turning on GitHub Pages…");
+    try{ await api(`/repos/${owner}/${name}/pages`, { method:"POST", body: JSON.stringify({ build_type:"workflow" }) }); }
+    catch(e){ if(e.status!==409 && e.status!==422) throw e; } // 409/422 = already enabled / not ready yet
+    step.className="ok"; step.textContent="GitHub Pages enabled";
+
+    step = logLine("run","Adding your files…");
+    // base tree from the auto_init commit
+    let base; for(let i=0;i<5;i++){ try{ base = await api(`/repos/${owner}/${name}/git/ref/heads/main`); break; }
+      catch(e){ if(i===4) throw e; await new Promise(r=>setTimeout(r,800)); } }
+    const baseCommit = base.object.sha;
+    const baseTree = (await api(`/repos/${owner}/${name}/git/commits/${baseCommit}`)).tree.sha;
+
+    const tree = [];
+    const put = async (path, b64) => {
+      const blob = await api(`/repos/${owner}/${name}/git/blobs`, { method:"POST",
+        body: JSON.stringify({ content:b64, encoding:"base64" }) });
+      tree.push({ path, mode:"100644", type:"blob", sha:blob.sha });
+    };
+    await put(".github/workflows/web.yml", btoa(unescape(encodeURIComponent(web_yml))));
+    await put("README.md", btoa(unescape(encodeURIComponent(studentReadme(name)))));
+    for(const f of files) await put(f.path, f.b64);
+
+    const newTree = await api(`/repos/${owner}/${name}/git/trees`, { method:"POST",
+      body: JSON.stringify({ base_tree: baseTree, tree }) });
+    const commit = await api(`/repos/${owner}/${name}/git/commits`, { method:"POST",
+      body: JSON.stringify({ message:"Add sketch + web build workflow", tree:newTree.sha, parents:[baseCommit] }) });
+    await api(`/repos/${owner}/${name}/git/refs/heads/main`, { method:"PATCH",
+      body: JSON.stringify({ sha:commit.sha, force:false }) });
+    step.className="ok"; step.textContent=`Committed ${files.length} file${files.length!==1?"s":""} + workflow`;
+
+    logLine("ok","Build started — it takes a few minutes.");
+    $("#workTitle").innerHTML = `<span class="step-no" style="background:var(--accent-2);color:var(--accent-ink);border-color:transparent">✓</span> Your project is building!`;
+
+    const repoUrl=`https://github.com/${owner}/${name}`;
+    const actionsUrl=`${repoUrl}/actions`;
+    const liveUrl=`https://${owner}.github.io/${name}/`;
+    $("#links").innerHTML =
+      link("Watch the build", actionsUrl, actionsUrl, "When it's green, your site is live.") +
+      link("Your live sketch", liveUrl, liveUrl, "Ready in a few minutes (refresh if blank).") +
+      link("Your repository", repoUrl, repoUrl, "");
+    const again=document.createElement("button"); again.className="btn-ghost"; again.textContent="Publish another sketch";
+    again.onclick=()=>{ files.length=0; renderFiles(); show("#stepWork",false); show("#stepForm",true); };
+    $("#againRow").appendChild(again);
+
+  }catch(e){
+    let msg = e.message || String(e);
+    if(e.status===422 && /name already exists/i.test(e.data?.errors?.[0]?.message||msg))
+      msg = "You already have a repository with that name — pick another name.";
+    if(/workflow/i.test(msg) && e.status) msg = "GitHub blocked the workflow file. The sign-in needs the 'workflow' permission — sign out and in again.";
+    logLine("err","✗ "+msg);
+    const retry=document.createElement("button"); retry.className="btn-ghost"; retry.textContent="Back";
+    retry.onclick=()=>{ show("#stepWork",false); show("#stepForm",true); };
+    $("#againRow").appendChild(retry);
+  }
+}
+function link(lbl, href, url, sub){
+  return `<a href="${href}" target="_blank" rel="noopener"><span class="lbl">${lbl}</span>`+
+    (sub?`<span class="muted" style="font-size:12.5px;margin-left:10px">${sub}</span>`:"")+
+    `<span class="url">${url.replace(/^https:\/\//,"")}</span></a>`;
+}
+
+/* ---------- render ---------- */
+async function render(){
+  if(!configured()){ show("#setupNotice", true); return; }
+  if(token && !me){ try{ me = await api("/user"); } catch{ token=null; sessionStorage.removeItem("gh_token"); } }
+  if(token && me){
+    show("#stepAuth",false); show("#stepForm",true); show("#stepWork",false);
+    $("#login").textContent = me.login; $("#avatar").src = me.avatar_url;
+    updateUrlPreview();
+  }else{
+    show("#stepAuth",true); show("#stepForm",false); show("#stepWork",false);
+  }
+}
+function updateUrlPreview(){
+  const n = sanitizeName($("#repoName").value);
+  $("#urlPreview").textContent = `https://${me?me.login:"you"}.github.io/${n}/`;
+}
+
+/* ---------- wire up ---------- */
+function wireDrop(zoneSel, pickSel, kind){
+  const zone=$(zoneSel), pick=$(pickSel);
+  zone.onclick=()=>pick.click();
+  pick.onchange=()=>{ addFiles(pick.files, kind); pick.value=""; };
+  ["dragenter","dragover"].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add("over");}));
+  ["dragleave","drop"].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove("over");}));
+  zone.addEventListener("drop",e=>{ if(e.dataTransfer?.files?.length) addFiles(e.dataTransfer.files, kind); });
+}
+window.addEventListener("DOMContentLoaded", async ()=>{
+  $("#signIn").onclick=signIn;
+  $("#signOut").onclick=signOut;
+  $("#publish").onclick=publish;
+  $("#repoName").addEventListener("input", updateUrlPreview);
+  wireDrop("#dropSrc","#pickSrc","src");
+  wireDrop("#dropData","#pickData","data");
+  await handleRedirect();
+  await render();
+});
+</script>
+</body>
+</html>

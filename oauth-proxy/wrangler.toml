@@ -1,0 +1,11 @@
+name = "of-oauth"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Public values (safe to commit). Fill these in, or set them in the Cloudflare dashboard.
+[vars]
+CLIENT_ID = "PASTE_OAUTH_CLIENT_ID"
+ALLOWED_ORIGIN = "https://maxfishman.github.io"
+
+# CLIENT_SECRET is a SECRET — never put it here. Set it with:
+#   wrangler secret put CLIENT_SECRET
