@@ -75,11 +75,40 @@ jobs:
           curl -fsSL -o "$OUT/coi-serviceworker.min.js" https://unpkg.com/coi-serviceworker@0.1.7/coi-serviceworker.min.js
           sed -i 's#<head>#<head>\n    <script src="coi-serviceworker.min.js"></script>#' "$OUT/index.html"
           grep -n "coi-serviceworker" "$OUT/index.html"
-          # The template's "Fullscreen" button only drops the fixed-size canvas onto a
-          # black screen. Force a fullscreen canvas to fill the viewport so it actually
-          # goes fullscreen (the !important rules beat emscripten's inline sizing).
+          # Make fullscreen actually work. Two fixes:
+          # 1) CSS: force a fullscreen canvas to fill the viewport (the !important
+          #    rules beat emscripten's inline sizing). The 'f' key in the sketch and
+          #    the button below both rely on this to fill the screen.
           sed -i 's|</head>|  <style>#canvas:fullscreen{position:fixed!important;top:0!important;left:0!important;width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important}</style>\n  </head>|' "$OUT/index.html"
           grep -n "canvas:fullscreen" "$OUT/index.html"
+          # 2) Button: the template wires "Fullscreen" to Module.requestFullscreen with
+          #    pointer-lock on, which throws NotAllowedError and collapses the canvas to
+          #    0x0 -> a black screen. Intercept the click (capture phase, so it beats the
+          #    template's own handler) and just request plain fullscreen on the canvas.
+          python3 - "$OUT/index.html" <<'PY'
+          import sys
+          p = sys.argv[1]
+          snippet = """  <script>
+          (function(){
+            function go(){
+              var c=document.getElementById('canvas'); if(!c) return;
+              if(document.fullscreenElement){ if(document.exitFullscreen) document.exitFullscreen(); return; }
+              var req=c.requestFullscreen||c.webkitRequestFullscreen; if(req) req.call(c);
+            }
+            document.addEventListener('click',function(e){
+              var t=e.target;
+              if(t&&t.id==='fullscreenButton'){ e.stopImmediatePropagation(); e.preventDefault(); go(); }
+            },true);
+          })();
+          </script>
+          </body>"""
+          s = open(p).read()
+          assert '</body>' in s, 'no </body> in index.html'
+          s = s.replace('</body>', snippet, 1)
+          open(p,'w').write(s)
+          print('injected fullscreen button fix')
+          PY
+          grep -n "fullscreenButton" "$OUT/index.html"
           ls -la "$OUT"
 
       - name: Package the web page
