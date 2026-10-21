@@ -4,21 +4,27 @@ You write normal openFrameworks C++. You push to GitHub. A few minutes later you
 sketch is running in the browser at a public URL. No local toolchain, no manual build.
 
 **Live demo:** https://maxfishman.github.io/OpenFrameworksTest/
+**One-click uploader:** https://maxfishman.github.io/OpenFrameworksTest/uploader/
+
+> New here? The fastest route is the [**web uploader**](#publish-in-one-click-the-web-uploader):
+> drop in your `src/`, and it creates the repo, adds the workflow, and turns on Pages
+> for you — no template, no command line.
 
 ---
 
 ## Table of contents
 
 1. [How it works (the big picture)](#how-it-works-the-big-picture)
-2. [What's in this repo](#whats-in-this-repo)
-3. [Quick start: convert your own project](#quick-start-convert-your-own-project)
-4. [Enabling GitHub Pages (one-time)](#enabling-github-pages-one-time)
-5. [Controls in the demo](#controls-in-the-demo)
-6. [Writing code that works on the web](#writing-code-that-works-on-the-web)
-7. [What the workflow does, step by step](#what-the-workflow-does-step-by-step)
-8. [Troubleshooting](#troubleshooting)
-9. [Advanced: addons, pinning versions, caching](#advanced-addons-pinning-versions-caching)
-10. [FAQ](#faq)
+2. [Publish in one click (the web uploader)](#publish-in-one-click-the-web-uploader)
+3. [What's in this repo](#whats-in-this-repo)
+4. [Quick start: convert your own project](#quick-start-convert-your-own-project)
+5. [Enabling GitHub Pages (one-time)](#enabling-github-pages-one-time)
+6. [Controls in the demo](#controls-in-the-demo)
+7. [Writing code that works on the web](#writing-code-that-works-on-the-web)
+8. [What the workflow does, step by step](#what-the-workflow-does-step-by-step)
+9. [Troubleshooting](#troubleshooting)
+10. [Advanced: addons, pinning versions, caching](#advanced-addons-pinning-versions-caching)
+11. [FAQ](#faq)
 
 ---
 
@@ -53,6 +59,46 @@ The only files **you** maintain are your source code in `src/` (and optional ass
 
 ---
 
+## Publish in one click (the web uploader)
+
+Setting up the template by hand is fine, but there's an even shorter path: the
+**web uploader**, a small browser app that does the GitHub wiring for you.
+
+**Open it:** https://maxfishman.github.io/OpenFrameworksTest/uploader/
+
+```
+open the uploader → paste a GitHub token → drop in your src/ → “Create my project”
+        │
+        ▼
+the uploader (running in YOUR browser) talks straight to GitHub and:
+        │
+        ├─ creates a brand-new repository on your account
+        ├─ commits your src/ (and bin/data/) into it
+        ├─ adds the current .github/workflows/web.yml for you
+        └─ turns on GitHub Pages (Source = GitHub Actions)
+        │
+        ▼
+GitHub Actions builds it (the exact same flow as the diagram above)
+        │
+        ▼
+your sketch is live at https://<you>.github.io/<repo>/
+```
+
+Notes:
+
+- **No server, no setup.** The uploader is a static page. The GitHub token you paste
+  stays only in your browser tab and is sent directly to GitHub — never to us.
+- **It bundles the latest workflow.** Each deploy stamps the current `web.yml` into the
+  uploader, so repos it creates always get the up-to-date build (cache fixes included).
+- **It's a PWA.** You can install it and it works offline for everything except the
+  actual GitHub calls.
+- The demo page also has a **“Publish your sketch”** button that opens the uploader.
+
+See [`web/uploader/`](web/uploader/) for the source, and the
+[Privacy Policy](web/uploader/privacy.html) / [Terms of Service](web/uploader/terms.html).
+
+---
+
 ## What's in this repo
 
 ```
@@ -64,22 +110,35 @@ The only files **you** maintain are your source code in `src/` (and optional ass
 │   ├── main.cpp           ← creates the window and starts the app
 │   ├── ofApp.h / ofApp.cpp← your sketch (setup / draw / input)
 │   └── mover.hpp / mover.cpp ← a helper class used by the demo
+├── web/                   ← extras layered onto the published page (not part of the sketch)
+│   ├── sw.js              ← combined COOP/COEP + offline service worker for the demo
+│   ├── icons/             ← PWA / favicon icons
+│   └── uploader/          ← the one-click publish app (index.html, privacy, terms)
 └── README.md              ← you are here
 ```
 
-That's it — there is **no** `bin/`, no openFrameworks copy, no Makefile in the repo.
-The workflow adds those during the build so you never commit them.
+The `src/` folder is the only part you’d normally edit. There is **no** `bin/`, no
+openFrameworks copy, and no Makefile in the repo — the workflow adds those during the
+build so you never commit them. The `web/` folder is optional chrome the workflow copies
+onto the deployed site; your own sketch doesn’t need it.
 
 ---
 
 ## Quick start: convert your own project
 
-There are two easy ways to get the workflow into your own project.
+There are a few easy ways to get your sketch building on the web.
 
-### Option A — Use this repo as a template (recommended)
+### Option A — Use the web uploader (easiest, no setup)
+
+Open the [**web uploader**](https://maxfishman.github.io/OpenFrameworksTest/uploader/),
+paste a GitHub token, drop in your `src/` (a folder, a `.zip`, or loose files), and
+click **Create my project**. It makes the repo, adds the workflow, and turns on Pages
+for you. See [Publish in one click](#publish-in-one-click-the-web-uploader) above.
+
+### Option B — Use this repo as a template
 
 1. On this repo's GitHub page, click **“Use this template” → “Create a new repository.”**
-   (If that button isn't available, just fork it, or use Option B.)
+   (If that button isn't available, just fork it, or use Option C.)
 2. Clone your new repo, delete the demo code in `src/`, and drop in **your own**
    `src/` files (`main.cpp`, `ofApp.h`, `ofApp.cpp`, plus any other classes).
 3. If your sketch loads images, fonts, sounds, etc., put them in `bin/data/`
@@ -88,7 +147,7 @@ There are two easy ways to get the workflow into your own project.
 5. Do the [one-time Pages setup](#enabling-github-pages-one-time).
 6. Wait for the build (watch the **Actions** tab). When it's green, open your site.
 
-### Option B — Add the workflow to an existing repo
+### Option C — Add the workflow to an existing repo
 
 1. Copy the single file `.github/workflows/web.yml` from this repo into the **same
    path** in your repo.
@@ -272,6 +331,13 @@ It only happens on the first load.
 If your repo is public and Pages is on, anyone with the URL can view it. For a private
 repo, GitHub Pages deployment requires a paid GitHub plan.
 
+**Is the uploader's GitHub token safe to paste?**
+The token lives only in that browser tab (`sessionStorage`) and is sent straight to
+GitHub's API — it never reaches any server of ours. Give it a short expiration and the
+minimum scopes (`public_repo`, `workflow`, which the uploader pre-ticks), and you can
+revoke it anytime at **GitHub → Settings → Developer settings → Tokens**. See the
+uploader's [Privacy Policy](web/uploader/privacy.html).
+
 **Where do I change the window size?**
 In `src/main.cpp`: `settings.setSize(1024, 768);`. On the web the canvas is then
 scaled to fit the page / fullscreen.
@@ -283,3 +349,7 @@ Watch the **Actions** tab for progress.
 ---
 
 Happy sketching — push some C++ and watch it run in a browser. 🎨
+
+---
+
+Built by **Max Fishman** + **Luisa Pinzon** (Executive Directors — Digital Arts).
