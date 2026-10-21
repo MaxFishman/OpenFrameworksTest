@@ -49,7 +49,7 @@ jobs:
           # If the compiled library was restored from cache, git-cloned sources are newer
           # than the cached objects, which would make `make` recompile everything. Touch the
           # cached outputs (objects, then lib) so make treats them as up to date and skips
-          # rebuilding openFrameworks — turning a ~4 min build into ~1 min.
+          # rebuilding openFrameworks -- turning a ~4 min build into ~1 min.
           if [ -d of/libs/openFrameworksCompiled/project/emscripten/obj ]; then
             find of/libs/openFrameworksCompiled/project/emscripten/obj -type f -exec touch {} + 2>/dev/null || true
             find of/libs/openFrameworksCompiled/lib/emscripten -type f -exec touch {} + 2>/dev/null || true
@@ -59,7 +59,7 @@ jobs:
           docker exec -w /src/of/libs/openFrameworksCompiled/project emscripten emmake make -j4 Release
           # the objects/lib are created as root inside the container; hand them back to the
           # runner so actions/cache can read ALL of them (not just the few world-readable
-          # files) when it saves — otherwise the cache is incomplete and oF recompiles.
+          # files) when it saves -- otherwise the cache is incomplete and oF recompiles.
           sudo chown -R "$(id -u):$(id -g)" of/libs/openFrameworksCompiled/lib of/libs/openFrameworksCompiled/project 2>/dev/null || true
 
       - name: Set up the sketch project

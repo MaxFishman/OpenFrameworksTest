@@ -648,7 +648,10 @@ async function publish(){
         body: JSON.stringify({ content:b64, encoding:"base64" }) });
       tree.push({ path, mode:"100644", type:"blob", sha:blob.sha });
     };
-    await put(".github/workflows/web.yml", btoa(unescape(encodeURIComponent(web_yml))));
+    // Commit the workflow byte-exact: __WEB_YML_B64__ IS the base64 of the file, so pass it
+    // straight through. Re-encoding via encodeURIComponent double-encodes any non-ASCII byte
+    // (atob already returned a byte string), corrupting the YAML — which GitHub then rejects.
+    await put(".github/workflows/web.yml", window.__WEB_YML_B64__);
     await put("README.md", btoa(unescape(encodeURIComponent(studentReadme(name)))));
     for(const f of files) await put(f.path, f.b64);
 
