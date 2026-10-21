@@ -42,7 +42,7 @@ jobs:
           path: |
             of/libs/openFrameworksCompiled/lib/emscripten
             of/libs/openFrameworksCompiled/project/emscripten/obj
-          key: of-emscripten-0.12.1-emsdk4.0.4-v1
+          key: of-emscripten-0.12.1-emsdk4.0.4-v2
 
       - name: Build openFrameworks for the web
         run: |
@@ -57,6 +57,10 @@ jobs:
           fi
           sed -i "s/PLATFORM_OPTIMIZATION_CFLAGS_DEBUG = .*/PLATFORM_OPTIMIZATION_CFLAGS_DEBUG = -g0/" of/libs/openFrameworksCompiled/project/emscripten/config.emscripten.default.mk
           docker exec -w /src/of/libs/openFrameworksCompiled/project emscripten emmake make -j4 Release
+          # the objects/lib are created as root inside the container; hand them back to the
+          # runner so actions/cache can read ALL of them (not just the few world-readable
+          # files) when it saves — otherwise the cache is incomplete and oF recompiles.
+          sudo chown -R "$(id -u):$(id -g)" of/libs/openFrameworksCompiled/lib of/libs/openFrameworksCompiled/project 2>/dev/null || true
 
       - name: Set up the sketch project
         run: |
