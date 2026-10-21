@@ -57,6 +57,10 @@
   .drop.over{border-color:var(--accent);background:rgba(255,61,110,.07)}
   .drop strong{color:var(--ink)}
   .drop .sub{display:block;color:var(--faint);font-size:12.5px;margin-top:5px}
+  .pickrow{margin:10px 0 0 2px;font-size:13px;color:var(--muted)}
+  .linkbtn{background:none;border:0;color:var(--accent);font:inherit;font-weight:600;padding:0;cursor:pointer}
+  .linkbtn:hover{text-decoration:underline}
+  .pickrow .sep{margin:0 8px;color:var(--faint)}
   .files{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
   .files li{display:flex;align-items:center;gap:10px;font-size:13.5px;background:var(--panel-2);
     border:1px solid var(--line);border-radius:9px;padding:8px 11px}
@@ -135,19 +139,27 @@
     </div>
 
     <div class="step-head"><span class="step-no">3</span> Add your files</div>
-    <p class="step-sub">Your <span class="mono">src</span> files (.cpp / .h / .hpp). Optionally add
-      images, fonts or sounds — those go into <span class="mono">bin/data</span>.</p>
+    <p class="step-sub">Drag in your whole openFrameworks project folder, a
+      <span class="mono">.zip</span> of it, or individual files. Code goes to
+      <span class="mono">src/</span> and assets to <span class="mono">bin/data/</span>, automatically.</p>
     <div style="margin-left:36px">
       <div class="drop" id="dropSrc">
-        <strong>Drop source files here</strong>, or click to choose
-        <span class="sub">.cpp .h .hpp .cc .cxx → src/</span>
+        <strong>Drop your project folder, a .zip, or files</strong>
+        <span class="sub">auto-sorted — code → src/, assets → bin/data/</span>
       </div>
-      <div class="drop" id="dropData" style="margin-top:10px">
-        <strong>Drop data files here</strong> (optional)
-        <span class="sub">images, fonts, sounds → bin/data/</span>
+      <div class="pickrow">
+        <button type="button" class="linkbtn" id="btnFiles">choose files</button>
+        <span class="sep">·</span>
+        <button type="button" class="linkbtn" id="btnFolder">choose a folder</button>
       </div>
+      <div class="drop" id="dropData" style="margin-top:12px">
+        <strong>Add data files</strong> (optional)
+        <span class="sub">force images / fonts / sounds → bin/data/</span>
+      </div>
+      <p class="hint hidden" id="skipNote"></p>
       <ul class="files" id="fileList"></ul>
       <input type="file" id="pickSrc" multiple class="hidden">
+      <input type="file" id="pickFolder" multiple webkitdirectory class="hidden">
       <input type="file" id="pickData" multiple class="hidden">
     </div>
 
@@ -232,35 +244,141 @@ async function api(path, opts={}){
   return data;
 }
 
-/* ---------- files ---------- */
-const SRC_EXT = ["cpp","h","hpp","cc","cxx","c","hh","ino","frag","vert","glsl"];
+/* ---------- files: accept loose files, whole folders, or a .zip ---------- */
+const SRC_EXT  = ["cpp","h","hpp","cc","cxx","c","hh","ino"];
+const DATA_EXT = ["png","jpg","jpeg","gif","bmp","tga","psd","svg","ico",
+  "ttf","otf","woff","woff2","wav","mp3","ogg","aiff","aif","flac","m4a",
+  "mov","mp4","webm","json","xml","csv","txt","md","obj","ply","dae","fbx",
+  "frag","vert","glsl","geom","comp","hdr","exr"];
+const JUNK = /(^|\/)(__MACOSX|\.git|\.svn|node_modules|\.vscode|\.idea|obj|\.DS_Store|Thumbs\.db|desktop\.ini)(\/|$)/i;
+const MAX_FILE = 25 * 1024 * 1024;
+const skipped = [];
+
 function fileToB64(file){
   return new Promise((res, rej)=>{ const r=new FileReader();
     r.onload=()=>res(String(r.result).split(",")[1]); r.onerror=rej; r.readAsDataURL(file); });
 }
-async function addFiles(list, kind){
-  for(const f of list){
-    const ext = f.name.split(".").pop().toLowerCase();
-    const k = kind || (SRC_EXT.includes(ext) ? "src" : "data");
-    const path = (k==="src" ? "src/" : "bin/data/") + f.name;
-    if(files.some(x=>x.path===path)) continue;
-    files.push({ path, b64: await fileToB64(f), kind:k });
+function bytesToB64(u8){
+  let s=""; const C=0x8000;
+  for(let i=0;i<u8.length;i+=C) s+=String.fromCharCode.apply(null,u8.subarray(i,i+C));
+  return btoa(s);
+}
+// map a path inside a drop/zip to its place in the repo (or null = skip)
+function mapToRepoPath(relPath, forceKind){
+  let p = String(relPath||"").replace(/\\/g,"/").replace(/^\/+/,"");
+  if(!p || JUNK.test(p)) return null;
+  let m;
+  if(forceKind==="data"){
+    m = p.match(/(?:^|\/)bin\/data\/(.+)$/i);
+    return "bin/data/" + (m ? m[1] : p.split("/").pop());
   }
+  if((m = p.match(/(?:^|\/)src\/(.+)$/i)))       return "src/" + m[1];
+  if((m = p.match(/(?:^|\/)bin\/data\/(.+)$/i)))  return "bin/data/" + m[1];
+  if(/(?:^|\/)bin\//i.test(p)) return null;        // compiled output
+  const ext = p.split(".").pop().toLowerCase(), name = p.split("/").pop();
+  if(SRC_EXT.includes(ext))  return "src/" + name;
+  if(DATA_EXT.includes(ext)) return "bin/data/" + name;
+  return null;                                      // unknown project file
+}
+function pushFile(path, b64){
+  const kind = path.startsWith("src/") ? "src" : "data";
+  const i = files.findIndex(x=>x.path===path);
+  if(i>=0) files[i].b64 = b64; else files.push({ path, b64, kind });
+}
+async function addOneFile(file, relPath, forceKind){
+  if(/\.zip$/i.test(file.name)){ await addZip(file, forceKind); return; }
+  if(file.size > MAX_FILE){ skipped.push((relPath||file.name)+" (too big)"); return; }
+  const path = mapToRepoPath(relPath || file.name, forceKind);
+  if(!path){ skipped.push(relPath||file.name); return; }
+  pushFile(path, await fileToB64(file));
+}
+async function addFileList(list, forceKind){
+  for(const f of Array.from(list)) await addOneFile(f, f.webkitRelativePath || f.name, forceKind);
   renderFiles();
 }
+async function walkEntry(entry, forceKind){
+  if(entry.isFile){
+    const file = await new Promise((res,rej)=>entry.file(res,rej));
+    await addOneFile(file, entry.fullPath, forceKind);
+  }else if(entry.isDirectory){
+    const reader = entry.createReader(); let batch;
+    do{ batch = await new Promise((res,rej)=>reader.readEntries(res,rej));
+        for(const e of batch) await walkEntry(e, forceKind); }while(batch.length);
+  }
+}
+async function collectFromDrop(dt, forceKind){
+  const roots = [];
+  if(dt.items) for(const it of Array.from(dt.items))
+    if(it.kind==="file"){ const en = it.webkitGetAsEntry && it.webkitGetAsEntry(); if(en) roots.push(en); }
+  if(roots.length) for(const en of roots) await walkEntry(en, forceKind);
+  else if(dt.files && dt.files.length) for(const f of Array.from(dt.files)) await addOneFile(f, f.name, forceKind);
+  renderFiles();
+}
+/* --- tiny zip reader: stored + deflate, no dependencies --- */
+async function inflateRaw(u8){
+  if(typeof DecompressionStream==="undefined")
+    throw new Error("this browser can't open .zip — drop the folder or files instead");
+  const s = new Response(u8).body.pipeThrough(new DecompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(s).arrayBuffer());
+}
+async function unzip(buf){
+  const u8=new Uint8Array(buf), dv=new DataView(buf);
+  let eocd=-1;
+  for(let i=u8.length-22;i>=0 && i>=u8.length-22-65536;i--) if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;}
+  if(eocd<0) throw new Error("not a valid .zip");
+  const count=dv.getUint16(eocd+10,true); let p=dv.getUint32(eocd+16,true); const cd=[];
+  for(let n=0;n<count;n++){
+    if(dv.getUint32(p,true)!==0x02014b50) break;
+    const method=dv.getUint16(p+10,true), compSize=dv.getUint32(p+20,true);
+    const nameLen=dv.getUint16(p+28,true), extraLen=dv.getUint16(p+30,true), commentLen=dv.getUint16(p+32,true);
+    const local=dv.getUint32(p+42,true);
+    const name=new TextDecoder().decode(u8.subarray(p+46,p+46+nameLen));
+    cd.push({name,method,compSize,local}); p+=46+nameLen+extraLen+commentLen;
+  }
+  const out=[];
+  for(const e of cd){
+    if(e.name.endsWith("/")) continue;
+    const lo=e.local; if(dv.getUint32(lo,true)!==0x04034b50) continue;
+    const nl=dv.getUint16(lo+26,true), xl=dv.getUint16(lo+28,true);
+    const start=lo+30+nl+xl, comp=u8.subarray(start,start+e.compSize);
+    let bytes;
+    if(e.method===0) bytes=comp;
+    else if(e.method===8) bytes=await inflateRaw(comp);
+    else continue;
+    out.push({name:e.name, bytes});
+  }
+  return out;
+}
+async function addZip(file, forceKind){
+  let entries;
+  try{ entries = await unzip(await file.arrayBuffer()); }
+  catch(e){ skipped.push(file.name+" ("+e.message+")"); return; }
+  for(const en of entries){
+    if(en.bytes.length > MAX_FILE){ skipped.push(en.name+" (too big)"); continue; }
+    const path = mapToRepoPath(en.name, forceKind);
+    if(!path){ skipped.push(en.name); continue; }
+    pushFile(path, bytesToB64(en.bytes));
+  }
+}
 function renderFiles(){
-  const ul = $("#fileList"); ul.innerHTML="";
+  const ul=$("#fileList"); ul.innerHTML="";
+  files.sort((a,b)=>a.path.localeCompare(b.path));
   for(const f of files){
     const li=document.createElement("li");
-    li.innerHTML = `<span class="path">${f.path}</span><span class="tag">${f.kind}</span>
-      <button class="rm" title="Remove">×</button>`;
+    li.innerHTML=`<span class="path"></span><span class="tag">${f.kind}</span><button class="rm" title="Remove">×</button>`;
+    li.querySelector(".path").textContent=f.path;
     li.querySelector(".rm").onclick=()=>{ files.splice(files.indexOf(f),1); renderFiles(); };
     ul.appendChild(li);
   }
-  const hasSrc = files.some(f=>f.kind==="src");
-  $("#publish").disabled = !hasSrc;
-  $("#publishHint").textContent = hasSrc ? `${files.length} file${files.length>1?"s":""} ready.`
-                                         : "Add at least one source file.";
+  const hasSrc=files.some(f=>f.kind==="src");
+  $("#publish").disabled=!hasSrc;
+  $("#publishHint").textContent=hasSrc?`${files.length} file${files.length>1?"s":""} ready.`
+                                      :"Add at least one source file.";
+  const note=$("#skipNote");
+  if(skipped.length){ note.classList.remove("hidden");
+    note.textContent=`Skipped ${skipped.length} item${skipped.length>1?"s":""} (build files, hidden files or unsupported types).`;
+    note.title=skipped.join("\n"); }
+  else note.classList.add("hidden");
 }
 
 /* ---------- publish ---------- */
@@ -334,7 +452,7 @@ async function publish(){
       link("Your live sketch", liveUrl, liveUrl, "Ready in a few minutes (refresh if blank).") +
       link("Your repository", repoUrl, repoUrl, "");
     const again=document.createElement("button"); again.className="btn-ghost"; again.textContent="Publish another sketch";
-    again.onclick=()=>{ files.length=0; renderFiles(); show("#stepWork",false); show("#stepForm",true); };
+    again.onclick=()=>{ files.length=0; skipped.length=0; renderFiles(); show("#stepWork",false); show("#stepForm",true); };
     $("#againRow").appendChild(again);
 
   }catch(e){
@@ -372,21 +490,25 @@ function updateUrlPreview(){
 }
 
 /* ---------- wire up ---------- */
-function wireDrop(zoneSel, pickSel, kind){
-  const zone=$(zoneSel), pick=$(pickSel);
-  zone.onclick=()=>pick.click();
-  pick.onchange=()=>{ addFiles(pick.files, kind); pick.value=""; };
+function wireZone(sel, forceKind, pickSel){
+  const zone=$(sel);
+  zone.addEventListener("click",()=>$(pickSel).click());
   ["dragenter","dragover"].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add("over");}));
   ["dragleave","drop"].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove("over");}));
-  zone.addEventListener("drop",e=>{ if(e.dataTransfer?.files?.length) addFiles(e.dataTransfer.files, kind); });
+  zone.addEventListener("drop",e=>{ e.preventDefault(); if(e.dataTransfer) collectFromDrop(e.dataTransfer, forceKind); });
 }
 window.addEventListener("DOMContentLoaded", async ()=>{
   $("#signIn").onclick=signIn;
   $("#signOut").onclick=signOut;
   $("#publish").onclick=publish;
   $("#repoName").addEventListener("input", updateUrlPreview);
-  wireDrop("#dropSrc","#pickSrc","src");
-  wireDrop("#dropData","#pickData","data");
+  wireZone("#dropSrc", null,  "#pickSrc");
+  wireZone("#dropData","data","#pickData");
+  $("#btnFiles").onclick  =()=>$("#pickSrc").click();
+  $("#btnFolder").onclick =()=>$("#pickFolder").click();
+  $("#pickSrc").onchange    =e=>{ addFileList(e.target.files, null);   e.target.value=""; };
+  $("#pickFolder").onchange =e=>{ addFileList(e.target.files, null);   e.target.value=""; };
+  $("#pickData").onchange   =e=>{ addFileList(e.target.files, "data"); e.target.value=""; };
   await handleRedirect();
   await render();
 });
