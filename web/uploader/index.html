@@ -442,6 +442,7 @@ async function publish(){
     step.className="ok"; step.textContent=`Committed ${files.length} file${files.length!==1?"s":""} + workflow`;
 
     logLine("ok","Build started — it takes a few minutes.");
+    try{ localStorage.setItem("ofUploaderHidden","1"); }catch(e){}  // hide the "publish" button on the demo
     $("#workTitle").innerHTML = `<span class="step-no" style="background:var(--accent-2);color:var(--accent-ink);border-color:transparent">✓</span> Your project is building!`;
 
     const repoUrl=`https://github.com/${owner}/${name}`;
