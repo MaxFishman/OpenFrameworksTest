@@ -7,210 +7,355 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNmZjNjNjQiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMCAyMC40KSBzY2FsZSgwLjQpIiBmaWxsPSIjZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik01OCAyOUM1OCAxMyA0NSAwIDI5IDAgMTMgMCAwIDEzIDAgMjkgMCA0NSAxMyA1OCAyOSA1OCA0NSA1OCA1OCA0NSA1OCAyOVoiLz48cmVjdCB4PSI1OSIgd2lkdGg9IjI1IiBoZWlnaHQ9IjU4Ii8+PHJlY3QgeD0iODUiIHk9IjI2IiB3aWR0aD0iMTUiIGhlaWdodD0iMTUiLz48cGF0aCBkPSJNODUgMCAxMTAgMCA4NSAyNSA4NSAwWiIvPjwvZz48L3N2Zz4K">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
-<meta name="theme-color" content="#0e0e13">
+<meta name="theme-color" content="#0b0e14">
 <script src="sw.js"></script>
 <!-- Generated at build time: window.__WEB_YML_B64__ = the current web.yml, so student
      repos always get the up-to-date workflow. Loaded defensively (may be absent in dev). -->
 <script src="workflow.js"></script>
 <style>
+  /* ===========================================================
+     "Night sketch" — an editor/IDE theme for a creative-coding tool.
+     Palette reads as syntax highlighting: keyword(pink)=primary,
+     string(green), function(blue), number(orange), comment(gray).
+     =========================================================== */
   :root{
-    --bg:#0e0e13; --panel:#16161d; --panel-2:#1d1d26; --line:#2a2a36;
-    --ink:#f3f1ee; --muted:#9a98a6; --faint:#6b6a78;
-    --accent:#ff3d6e; --accent-2:#57e389; --accent-ink:#1a0710;
-    --radius:14px; --maxw:640px;
-    font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --bg:#0b0e14; --bg-2:#0e121b; --panel:#11151e; --panel-2:#161b26; --panel-3:#1b2130;
+    --line:#232a37; --line-2:#2e3749;
+    --ink:#d8e0ee; --muted:#8a93a6; --faint:#515b6d;
+    --kw:#ff5c8a;          /* keyword — primary accent (brand pink) */
+    --str:#9ece6a;         /* string — success/green */
+    --fn:#7aa2f7;          /* function — links/blue */
+    --num:#ff9e64;         /* number — warm highlight */
+    --cmt:#5c6a7e;         /* comment — muted gray-blue */
+    --accent:var(--kw); --accent-ink:#1b0a11;
+    --radius:12px; --maxw:680px;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    font-family:var(--mono);
   }
   *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
   html,body{margin:0;background:var(--bg);color:var(--ink);min-height:100%}
-  body{line-height:1.5;-webkit-font-smoothing:antialiased;
+  body{line-height:1.5;-webkit-font-smoothing:antialiased;font-size:15px;
     background:
-      radial-gradient(900px 500px at 85% -10%, rgba(255,61,110,.14), transparent 60%),
-      radial-gradient(800px 500px at 10% 110%, rgba(87,227,141,.10), transparent 55%),
-      var(--bg);}
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:40px 22px 80px}
-  header.hero{margin:18px 0 30px}
-  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
-    font-weight:700;margin:0 0 14px}
-  h1{font-size:clamp(30px,6vw,46px);line-height:1.04;margin:0 0 14px;font-weight:800;letter-spacing:-.02em}
-  h1 .pop{color:var(--accent)}
-  .lede{color:var(--muted);font-size:17px;margin:0;max-width:52ch}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-    padding:22px;margin:16px 0}
-  .step-no{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
-    border-radius:50%;background:var(--panel-2);border:1px solid var(--line);
-    font-size:13px;font-weight:700;color:var(--muted);margin-right:10px;flex:none}
-  .step-head{display:flex;align-items:center;font-weight:700;font-size:16px;margin:0 0 4px}
-  .step-sub{color:var(--muted);font-size:14px;margin:0 0 16px 36px}
-  button,.btn{font:inherit;font-weight:700;border-radius:11px;cursor:pointer;border:1px solid transparent;
-    padding:12px 18px;transition:transform .05s ease,background .15s ease,border-color .15s ease,opacity .15s}
+      radial-gradient(1100px 600px at 88% -12%, rgba(255,92,138,.10), transparent 60%),
+      radial-gradient(900px 600px at 6% 112%, rgba(122,162,247,.08), transparent 58%),
+      var(--bg);
+    background-attachment:fixed;}
+
+  /* scroll-driven reading progress (skill: scroll-timeline) */
+  .scrollbar{position:fixed;top:0;left:0;right:0;height:2px;transform-origin:0 50%;transform:scaleX(0);
+    background:linear-gradient(90deg,var(--kw),var(--fn));z-index:50}
+  @supports (animation-timeline:scroll()){
+    .scrollbar{animation:sb-grow linear both;animation-timeline:scroll(root block)}
+    @keyframes sb-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  }
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:30px 20px 70px}
+
+  /* editor window frame */
+  .editor{border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    background:linear-gradient(180deg,var(--bg-2),var(--panel));
+    box-shadow:0 24px 70px -30px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.02) inset}
+  .titlebar{display:flex;align-items:center;gap:12px;padding:11px 15px;
+    background:var(--panel-2);border-bottom:1px solid var(--line)}
+  .dots{display:flex;gap:7px;flex:none}
+  .dots i{width:11px;height:11px;border-radius:50%;display:block;background:var(--line-2)}
+  .dots i:nth-child(1){background:#ff5f57} .dots i:nth-child(2){background:#febc2e} .dots i:nth-child(3){background:#28c840}
+  .tab{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:7px}
+  .tab .dot{color:var(--kw)}
+  .path{margin-left:auto;font-size:11.5px;color:var(--faint)}
+  .editor-body{padding:26px 24px 28px}
+
+  /* hero */
+  header.hero{margin:4px 0 26px}
+  .eyebrow{font-size:12px;color:var(--faint);margin:0 0 14px}
+  .eyebrow .c{color:var(--cmt);}
+  h1{font-size:clamp(27px,5.2vw,40px);line-height:1.1;margin:0 0 14px;font-weight:700;letter-spacing:-.01em}
+  h1 .kw{color:var(--kw)} h1 .str{color:var(--str)} h1 .fn{color:var(--fn)}
+  .caret{display:inline-block;width:.6ch;height:1.05em;vertical-align:-.16em;margin-left:.08em;
+    background:var(--kw);animation:blink 1.05s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .lede{color:var(--muted);font-size:15.5px;margin:0;max-width:56ch;font-family:var(--sans);line-height:1.6}
+
+  /* compiler-style stepper */
+  .stepper{margin:0 0 22px;position:relative}
+  .stepper ol{list-style:none;display:flex;justify-content:space-between;margin:0;padding:0;position:relative;z-index:1}
+  .stepper li{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--faint);
+    background:var(--bg);padding:0 8px;transition:color .3s}
+  .stepper li:first-child{padding-left:0} .stepper li:last-child{padding-right:0}
+  .stepper .n{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:none;
+    border-radius:7px;border:1px solid var(--line-2);background:var(--panel-2);font-size:12px;font-weight:600;
+    color:var(--faint);transition:all .3s}
+  .stepper .t{display:none}
+  @media(min-width:520px){ .stepper .t{display:inline} }
+  .stepper li.active{color:var(--ink)}
+  .stepper li.active .n{border-color:var(--kw);color:var(--kw);background:rgba(255,92,138,.12);
+    box-shadow:0 0 0 3px rgba(255,92,138,.12)}
+  .stepper li.done{color:var(--str)}
+  .stepper li.done .n{border-color:rgba(158,206,106,.5);color:var(--str);background:rgba(158,206,106,.1)}
+  .stepper li.done .n::after{content:"✓"} .stepper li.done .n span{display:none}
+  .track{position:absolute;left:12px;right:12px;top:12px;height:2px;background:var(--line);border-radius:2px;z-index:0}
+  .fill{height:100%;width:0;border-radius:2px;background:linear-gradient(90deg,var(--str),var(--kw));
+    transition:width .5s cubic-bezier(.22,.61,.36,1)}
+
+  /* session bar */
+  #sessionBar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 18px;
+    padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);font-size:13px}
+  .who{display:flex;align-items:center;gap:9px;color:var(--muted);min-width:0}
+  .who img{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);flex:none}
+  .who b{color:var(--ink)} .who .at{color:var(--faint)}
+
+  /* panes */
+  .pane{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:22px}
+  .pane-in{animation:paneIn .42s cubic-bezier(.22,.61,.36,1) both}
+  @keyframes paneIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .pane-head{font-size:12.5px;color:var(--cmt);margin:0 0 4px}
+  .pane-head .hash{color:var(--kw)}
+  .pane-title{font-size:19px;font-weight:700;margin:0 0 6px;letter-spacing:-.01em}
+  .pane-sub{color:var(--muted);font-size:13.5px;margin:0 0 18px;font-family:var(--sans);line-height:1.55}
+
+  /* token steps */
+  .toksteps{margin:0 0 14px;padding-left:20px;color:var(--muted);font-size:13.5px;font-family:var(--sans)}
+  .toksteps li{margin:7px 0}
+  .toksteps a,.inlink{color:var(--fn);font-weight:600;text-decoration:none}
+  .toksteps a:hover,.inlink:hover{text-decoration:underline}
+  .scope{color:var(--num);font-family:var(--mono)}
+
+  /* form controls */
+  label.field{display:block;font-size:12px;color:var(--faint);margin:0 0 7px;text-transform:lowercase;letter-spacing:.03em}
+  input[type=text],input[type=password]{width:100%;padding:12px 13px;border-radius:10px;background:var(--bg-2);
+    border:1px solid var(--line-2);color:var(--ink);font:inherit;font-size:14px}
+  input::placeholder{color:var(--faint)}
+  input[type=text]:focus,input[type=password]:focus{outline:none;border-color:var(--kw);
+    box-shadow:0 0 0 3px rgba(255,92,138,.14)}
+  .prompt{position:relative}
+  .prompt::before{content:"$";position:absolute;left:13px;top:50%;transform:translateY(-50%);
+    color:var(--str);font-weight:700;pointer-events:none}
+  .prompt input{padding-left:28px}
+  .hint{font-size:12px;color:var(--faint);margin:9px 0 0;font-family:var(--sans)}
+  #tokenErr:not(:empty){color:#ff6b89;margin-top:10px;font-size:13px;font-family:var(--sans)}
+  .urlline{font-size:12.5px;color:var(--faint);margin:9px 0 0}
+  .urlline b{color:var(--str);font-weight:600}
+
+  /* buttons */
+  button,.btn{font:inherit;font-weight:600;font-size:14px;border-radius:9px;cursor:pointer;border:1px solid transparent;
+    padding:11px 17px;transition:transform .05s,background .15s,border-color .15s,opacity .15s,box-shadow .15s}
   button:active,.btn:active{transform:translateY(1px)}
-  button:disabled{opacity:.5;cursor:not-allowed}
-  .btn-primary{background:var(--accent);color:var(--accent-ink)}
-  .btn-primary:hover:not(:disabled){background:#ff5a84}
-  .btn-ghost{background:var(--panel-2);color:var(--ink);border-color:var(--line)}
-  .btn-ghost:hover:not(:disabled){border-color:#3a3a48}
-  .gh-btn{display:inline-flex;align-items:center;gap:10px}
-  .gh-btn svg{width:20px;height:20px;fill:currentColor}
-  label.field{display:block;font-size:13px;color:var(--muted);font-weight:600;margin:0 0 7px}
-  input[type=text],input[type=password]{width:100%;padding:12px 14px;border-radius:11px;background:var(--panel-2);
-    border:1px solid var(--line);color:var(--ink);font:inherit}
-  input[type=text]:focus,input[type=password]:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
-  .toksteps{margin:0;padding-left:20px;color:var(--muted);font-size:14px}
-  .toksteps li{margin:6px 0}
-  .toksteps a{color:var(--accent);font-weight:600;text-decoration:none}
-  .toksteps a:hover{text-decoration:underline}
-  #tokenErr:not(:empty){color:#ff8098}
-  .hint{font-size:12.5px;color:var(--faint);margin:7px 0 0}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-  .drop{border:1.5px dashed var(--line);border-radius:12px;padding:22px;text-align:center;
-    background:var(--panel-2);transition:border-color .15s,background .15s;cursor:pointer}
-  .drop.over{border-color:var(--accent);background:rgba(255,61,110,.07)}
-  .drop strong{color:var(--ink)}
-  .drop .sub{display:block;color:var(--faint);font-size:12.5px;margin-top:5px}
-  .pickrow{margin:10px 0 0 2px;font-size:13px;color:var(--muted)}
-  .linkbtn{background:none;border:0;color:var(--accent);font:inherit;font-weight:600;padding:0;cursor:pointer}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .btn-primary{background:var(--kw);color:var(--accent-ink);box-shadow:0 6px 20px -8px rgba(255,92,138,.7)}
+  .btn-primary:hover:not(:disabled){background:#ff76a0}
+  .btn-ghost{background:var(--panel-2);color:var(--ink);border-color:var(--line-2)}
+  .btn-ghost:hover:not(:disabled){border-color:var(--fn)}
+  .btn-sm{padding:7px 12px;font-size:12.5px}
+  .gh-btn{display:inline-flex;align-items:center;gap:9px}
+
+  .navrow{display:flex;gap:10px;align-items:center;margin-top:22px;flex-wrap:wrap}
+  .navrow .spacer{flex:1}
+  .row{display:flex;gap:11px;align-items:center;flex-wrap:wrap}
+
+  /* dropzones */
+  .drop{border:1.5px dashed var(--line-2);border-radius:11px;padding:20px;text-align:center;
+    background:var(--bg-2);transition:border-color .15s,background .15s;cursor:pointer}
+  .drop.over{border-color:var(--kw);background:rgba(255,92,138,.06)}
+  .drop strong{color:var(--ink);font-size:14px}
+  .drop .sub{display:block;color:var(--faint);font-size:12px;margin-top:5px;font-family:var(--mono)}
+  .drop .sub .s{color:var(--str)}
+  .pickrow{margin:10px 0 0 2px;font-size:12.5px;color:var(--faint)}
+  .linkbtn{background:none;border:0;color:var(--fn);font:inherit;font-weight:600;padding:0;cursor:pointer}
   .linkbtn:hover{text-decoration:underline}
-  .pickrow .sep{margin:0 8px;color:var(--faint)}
-  .files{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
-  .files li{display:flex;align-items:center;gap:10px;font-size:13.5px;background:var(--panel-2);
-    border:1px solid var(--line);border-radius:9px;padding:8px 11px}
-  .files .path{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink)}
-  .files .tag{margin-left:auto;font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
-  .files .rm{margin-left:8px;background:none;border:0;color:var(--faint);padding:2px 6px;font-size:16px;line-height:1}
-  .files .rm:hover{color:var(--accent)}
-  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-  .who{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
-  .who img{width:28px;height:28px;border-radius:50%;border:1px solid var(--line)}
-  .who b{color:var(--ink)}
-  .log{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
-    background:#0b0b10;border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin-top:4px}
-  .log div{padding:2px 0;color:var(--muted)}
-  .log div.ok::before{content:"✓ ";color:var(--accent-2)}
-  .log div.run::before{content:"• ";color:var(--accent)}
-  .log div.err{color:#ff8098}
-  .buildstat{display:flex;align-items:center;gap:11px;margin-top:12px;padding:13px 15px;border-radius:11px;
-    background:var(--panel-2);border:1px solid var(--line);font-size:14px}
-  .buildstat.ok{border-color:rgba(87,227,141,.5)}
-  .buildstat.err{border-color:rgba(255,61,110,.5)}
-  .buildstat .spin{width:16px;height:16px;flex:none;border-radius:50%;
-    border:2px solid rgba(255,255,255,.18);border-top-color:var(--accent);animation:spin .8s linear infinite}
+  .pickrow .sep{margin:0 8px;color:var(--line-2)}
+
+  /* file list */
+  .files{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
+  .files li{display:flex;align-items:center;gap:10px;font-size:13px;background:var(--bg-2);
+    border:1px solid var(--line);border-radius:8px;padding:7px 11px;animation:fileIn .25s ease both}
+  @keyframes fileIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+  .files .path{color:var(--ink)}
+  .files .tag{margin-left:auto;font-size:10.5px;letter-spacing:.06em;padding:2px 7px;border-radius:5px;
+    border:1px solid var(--line-2)}
+  .files .tag.src{color:var(--fn);border-color:rgba(122,162,247,.4)}
+  .files .tag.data{color:var(--num);border-color:rgba(255,158,100,.4)}
+  .files .rm{margin-left:4px;background:none;border:0;color:var(--faint);padding:2px 6px;font-size:16px;line-height:1}
+  .files .rm:hover{color:var(--kw)}
+
+  /* terminal / build log */
+  .log{font-size:13px;background:#070a0f;border:1px solid var(--line);border-radius:11px;
+    padding:14px 16px;margin-top:4px}
+  .log div{padding:2.5px 0;color:var(--muted)}
+  .log div.ok::before{content:"✓ ";color:var(--str)}
+  .log div.run::before{content:"▸ ";color:var(--kw)}
+  .log div.err{color:#ff6b89}
+  .buildstat{display:flex;align-items:center;gap:11px;margin-top:12px;padding:12px 14px;border-radius:10px;
+    background:var(--bg-2);border:1px solid var(--line);font-size:13.5px}
+  .buildstat.ok{border-color:rgba(158,206,106,.5)} .buildstat.err{border-color:rgba(255,92,138,.5)}
+  .buildstat .spin{width:15px;height:15px;flex:none;border-radius:50%;
+    border:2px solid rgba(255,255,255,.14);border-top-color:var(--kw);animation:spin .8s linear infinite}
   .buildstat .ico{font-weight:800;flex:none}
-  .buildstat.ok .ico{color:var(--accent-2)} .buildstat.err .ico{color:var(--accent)}
-  .buildstat a{color:var(--accent);font-weight:700;text-decoration:none} .buildstat a:hover{text-decoration:underline}
+  .buildstat.ok .ico{color:var(--str)} .buildstat.err .ico{color:var(--kw)}
+  .buildstat a{color:var(--fn);font-weight:700;text-decoration:none} .buildstat a:hover{text-decoration:underline}
   @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* result links */
   .links a{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;
-    background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin-top:9px}
-  .links a:hover{border-color:var(--accent)}
+    background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:9px;
+    transition:border-color .15s,transform .05s}
+  .links a:hover{border-color:var(--fn);transform:translateX(2px)}
   .links .lbl{font-weight:700}
-  .links .url{margin-left:auto;color:var(--faint);font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
-  .notice{background:rgba(255,61,110,.08);border:1px solid rgba(255,61,110,.35);color:#ffd4df;
-    border-radius:12px;padding:14px 16px;font-size:14px}
-  .notice code{background:rgba(0,0,0,.35);padding:1px 6px;border-radius:5px}
+  .links .url{margin-left:auto;color:var(--faint);font-size:12px}
   .muted{color:var(--muted)} .hidden{display:none}
-  footer{margin-top:40px;color:var(--faint);font-size:12.5px;text-align:center}
-  footer a{color:var(--muted)}
+
+  footer{margin-top:28px;color:var(--faint);font-size:12px;text-align:center;line-height:1.7}
+  footer a{color:var(--fn);text-decoration:none} footer a:hover{text-decoration:underline}
+  footer .credit b{color:var(--muted)}
+  footer .credit .role{display:block;margin-top:2px;color:var(--faint)}
+  footer .legal{margin-top:12px}
+  footer .legal .sep{margin:0 8px;color:var(--line-2)}
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+      transition-duration:.001ms!important}
+    .caret{animation:none}
+  }
 </style>
 </head>
 <body>
+<div class="scrollbar" aria-hidden="true"></div>
 <div class="wrap">
 
-  <header class="hero">
-    <p class="eyebrow">openFrameworks → the web</p>
-    <h1>Put your sketch <span class="pop">online</span> in one click.</h1>
-    <p class="lede">Drop in your openFrameworks source files. This sets up a GitHub repository
-      on your account that builds your sketch to WebAssembly and publishes it at a public link —
-      no compilers, no command line.</p>
-  </header>
+  <div class="editor">
+    <div class="titlebar">
+      <span class="dots"><i></i><i></i><i></i></span>
+      <span class="tab"><span class="dot">●</span> publish.sh</span>
+      <span class="path">~/openframeworks → web</span>
+    </div>
+    <div class="editor-body">
 
-  <!-- STEP 1: connect with a token -->
-  <section id="stepAuth" class="card hidden">
-    <div class="step-head"><span class="step-no">1</span> Connect GitHub</div>
-    <p class="step-sub">Create a quick access token so the app can make one repository for you.
-      It's kept only in this browser tab, and you can delete it on GitHub anytime.</p>
-    <div style="margin-left:36px">
-      <ol class="toksteps">
-        <li>Open the <a id="tokenLink" href="#" target="_blank" rel="noopener">pre-filled token page&#8599;</a>
-          — the needed permissions (<span class="mono">public_repo</span>, <span class="mono">workflow</span>) are already ticked.</li>
-        <li>Pick an expiration, scroll down, and click <b>Generate token</b>.</li>
-        <li>Copy it and paste it here:</li>
-      </ol>
-      <div class="row" style="margin-top:12px">
-        <input type="password" id="tokenInput" placeholder="ghp_… or github_pat_…"
-          autocomplete="off" spellcheck="false" style="flex:1;min-width:0">
-        <button class="btn-primary" id="tokenGo">Connect</button>
+      <header class="hero">
+        <p class="eyebrow"><span class="c">// openframeworks → webassembly, no toolchain</span></p>
+        <h1>From <span class="kw">src/</span> to a <span class="str">live&nbsp;URL</span><span class="caret" aria-hidden="true"></span></h1>
+        <p class="lede">Drop in your openFrameworks source. This wizard sets up a GitHub repository that
+          compiles your sketch to WebAssembly and publishes it at a public link — no compilers,
+          no command line.</p>
+      </header>
+
+      <!-- compiler-style stepper -->
+      <nav class="stepper" aria-label="Progress">
+        <div class="track"><div class="fill" id="stepFill"></div></div>
+        <ol>
+          <li data-step="connect"><span class="n"><span>01</span></span><span class="t">connect</span></li>
+          <li data-step="name"><span class="n"><span>02</span></span><span class="t">name</span></li>
+          <li data-step="files"><span class="n"><span>03</span></span><span class="t">files</span></li>
+          <li data-step="build"><span class="n"><span>04</span></span><span class="t">build</span></li>
+        </ol>
+      </nav>
+
+      <!-- session bar (visible once connected) -->
+      <div id="sessionBar" class="hidden">
+        <span class="who"><img id="avatar" alt=""><span>signed in <span class="at">as</span> <b id="login"></b></span></span>
+        <button class="btn-ghost btn-sm" id="signOut">Sign out</button>
       </div>
-      <p class="hint" id="tokenErr"></p>
-    </div>
-  </section>
 
-  <!-- STEP 2+3: build the project -->
-  <section id="stepForm" class="card hidden">
-    <div class="row" style="justify-content:space-between;margin-bottom:18px">
-      <div class="who"><img id="avatar" alt=""><span>Signed in as <b id="login"></b></span></div>
-      <button class="btn-ghost" id="signOut" style="padding:8px 12px;font-size:13px">Sign out</button>
-    </div>
+      <!-- STEP 01: connect -->
+      <section id="paneConnect" class="pane hidden">
+        <p class="pane-head"><span class="hash">#</span> 01 — connect github</p>
+        <h2 class="pane-title">Create an access token</h2>
+        <p class="pane-sub">The app makes one repository for you using a token that stays only in this
+          browser tab. You can delete it on GitHub anytime.</p>
+        <ol class="toksteps">
+          <li>Open the <a id="tokenLink" href="#" target="_blank" rel="noopener">pre-filled token page&#8599;</a>
+            — the scopes <span class="scope">public_repo</span>, <span class="scope">workflow</span> are already ticked.</li>
+          <li>Pick an expiration, scroll down, and click <b>Generate token</b>.</li>
+          <li>Copy it and paste it below.</li>
+        </ol>
+        <label class="field" for="tokenInput">paste token</label>
+        <div class="prompt">
+          <input type="password" id="tokenInput" placeholder="ghp_… or github_pat_…"
+            autocomplete="off" spellcheck="false">
+        </div>
+        <p id="tokenErr"></p>
+        <div class="navrow">
+          <span class="spacer"></span>
+          <button class="btn-primary gh-btn" id="tokenGo">
+            <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            Connect
+          </button>
+        </div>
+      </section>
 
-    <div class="step-head"><span class="step-no">2</span> Name your project</div>
-    <p class="step-sub">This becomes your repository name and part of your live URL.</p>
-    <div style="margin-left:36px;margin-bottom:24px">
-      <label class="field" for="repoName">Repository name</label>
-      <input type="text" id="repoName" value="my-of-sketch" autocomplete="off" spellcheck="false">
-      <p class="hint">Live at <span class="mono" id="urlPreview">https://you.github.io/my-of-sketch/</span></p>
-    </div>
+      <!-- STEP 02: name -->
+      <section id="paneName" class="pane hidden">
+        <p class="pane-head"><span class="hash">#</span> 02 — name your project</p>
+        <h2 class="pane-title">Name your project</h2>
+        <p class="pane-sub">This becomes your repository name and part of your live URL.</p>
+        <label class="field" for="repoName">repository name</label>
+        <input type="text" id="repoName" value="my-of-sketch" autocomplete="off" spellcheck="false">
+        <p class="urlline">live at <b id="urlPreview">https://you.github.io/my-of-sketch/</b></p>
+        <div class="navrow">
+          <span class="spacer"></span>
+          <button class="btn-primary" id="toFiles">Next: add files →</button>
+        </div>
+      </section>
 
-    <div class="step-head"><span class="step-no">3</span> Add your files</div>
-    <p class="step-sub">Drag in your whole openFrameworks project folder, a
-      <span class="mono">.zip</span> of it, or individual files. Code goes to
-      <span class="mono">src/</span> and assets to <span class="mono">bin/data/</span>, automatically.</p>
-    <div style="margin-left:36px">
-      <div class="drop" id="dropSrc">
-        <strong>Drop your project folder, a .zip, or files</strong>
-        <span class="sub">auto-sorted — code → src/, assets → bin/data/</span>
-      </div>
-      <div class="pickrow">
-        <button type="button" class="linkbtn" id="btnFiles">choose files</button>
-        <span class="sep">·</span>
-        <button type="button" class="linkbtn" id="btnFolder">choose a folder</button>
-      </div>
-      <div class="drop" id="dropData" style="margin-top:12px">
-        <strong>Add data files</strong> (optional)
-        <span class="sub">force images / fonts / sounds → bin/data/</span>
-      </div>
-      <p class="hint hidden" id="skipNote"></p>
-      <ul class="files" id="fileList"></ul>
-      <input type="file" id="pickSrc" multiple class="hidden">
-      <input type="file" id="pickFolder" multiple webkitdirectory class="hidden">
-      <input type="file" id="pickData" multiple class="hidden">
-    </div>
+      <!-- STEP 03: files -->
+      <section id="paneFiles" class="pane hidden">
+        <p class="pane-head"><span class="hash">#</span> 03 — add your files</p>
+        <h2 class="pane-title">Add your files</h2>
+        <p class="pane-sub">Drag in your whole openFrameworks project folder, a <span class="scope">.zip</span>
+          of it, or individual files. Code routes to <span class="scope">src/</span> and assets to
+          <span class="scope">bin/data/</span>, automatically.</p>
+        <div class="drop" id="dropSrc">
+          <strong>Drop your project folder, a .zip, or files</strong>
+          <span class="sub">auto-sorted — code <span class="s">→ src/</span>, assets <span class="s">→ bin/data/</span></span>
+        </div>
+        <div class="pickrow">
+          <button type="button" class="linkbtn" id="btnFiles">choose files</button>
+          <span class="sep">·</span>
+          <button type="button" class="linkbtn" id="btnFolder">choose a folder</button>
+        </div>
+        <div class="drop" id="dropData" style="margin-top:12px">
+          <strong>Add data files</strong> (optional)
+          <span class="sub">force images / fonts / sounds <span class="s">→ bin/data/</span></span>
+        </div>
+        <p class="hint hidden" id="skipNote"></p>
+        <ul class="files" id="fileList"></ul>
+        <input type="file" id="pickSrc" multiple class="hidden">
+        <input type="file" id="pickFolder" multiple webkitdirectory class="hidden">
+        <input type="file" id="pickData" multiple class="hidden">
+        <div class="navrow">
+          <button class="btn-ghost" id="backName">← Back</button>
+          <span class="spacer"></span>
+          <span class="hint" id="publishHint">Add at least one source file.</span>
+          <button class="btn-primary" id="publish" disabled>Create my project →</button>
+        </div>
+      </section>
 
-    <div class="row" style="margin:24px 0 0 36px">
-      <button class="btn-primary" id="publish" disabled>Create my project</button>
-      <span class="hint" id="publishHint">Add at least one source file.</span>
-    </div>
-  </section>
+      <!-- STEP 04: build / result -->
+      <section id="stepWork" class="pane hidden">
+        <p class="pane-head"><span class="hash">#</span> 04 — build &amp; publish</p>
+        <div class="pane-title" id="workTitle">Building your project…</div>
+        <div class="log" id="log"></div>
+        <div class="buildstat hidden" id="buildStatus"></div>
+        <div class="links" id="links"></div>
+        <div class="row" id="againRow" style="margin-top:18px"></div>
+      </section>
 
-  <!-- working / result -->
-  <section id="stepWork" class="card hidden">
-    <div class="step-head" id="workTitle"><span class="step-no">●</span> Building your project…</div>
-    <div class="log" id="log"></div>
-    <div class="buildstat hidden" id="buildStatus"></div>
-    <div class="links" id="links"></div>
-    <div class="row" id="againRow" style="margin-top:18px"></div>
-  </section>
+      <footer>
+        <div>builds with openFrameworks 0.12.1 + Emscripten · <a href="../">see the demo sketch</a></div>
+        <div class="credit" style="margin-top:12px">
+          App built by <b>Max Fishman</b> + <b>Luisa Pinzon</b>
+          <span class="role">Executive Directors — Digital Arts</span>
+        </div>
+        <div class="legal">
+          <a href="privacy.html">Privacy Policy</a>
+          <span class="sep">·</span>
+          <a href="terms.html">Terms of Service</a>
+        </div>
+      </footer>
 
-  <footer>
-    Made for the course · builds with openFrameworks 0.12.1 + Emscripten ·
-    <a href="../">see the demo sketch</a>
-    <div style="margin-top:12px">
-      App built by <b style="color:var(--muted)">Max Fishman</b> + <b style="color:var(--muted)">Luisa Pinzon</b>
-      <span style="display:block;margin-top:2px">Executive Directors — Digital Arts</span>
-    </div>
-    <div style="margin-top:12px">
-      <a href="privacy.html">Privacy Policy</a>
-      <span style="margin:0 8px;color:var(--line)">·</span>
-      <a href="terms.html">Terms of Service</a>
-    </div>
-  </footer>
+    </div><!-- /editor-body -->
+  </div><!-- /editor -->
 </div>
 
 <script>
@@ -226,8 +371,33 @@ let token = sessionStorage.getItem("gh_token") || null;
 let me = null;                 // {login, avatar_url}
 const files = [];              // {path, b64, kind}
 
+/* ---------- wizard navigation ---------- */
+const STEP_ORDER = ["connect","name","files","build"];
+const PANE_SEL = { connect:"#paneConnect", name:"#paneName", files:"#paneFiles", build:"#stepWork" };
+let formStep = "name";         // remembers name/files between renders
+
+function updateStepper(active){
+  const ai = STEP_ORDER.indexOf(active);
+  document.querySelectorAll(".stepper li").forEach(li=>{
+    const i = STEP_ORDER.indexOf(li.dataset.step);
+    li.classList.toggle("active", i===ai);
+    li.classList.toggle("done", i<ai);
+  });
+  const fill = $("#stepFill");
+  if(fill) fill.style.width = (ai/(STEP_ORDER.length-1))*100 + "%";
+}
+function showPane(key){
+  Object.values(PANE_SEL).forEach(sel=>$(sel).classList.add("hidden"));
+  const el = $(PANE_SEL[key]);
+  el.classList.remove("hidden");
+  el.classList.remove("pane-in"); void el.offsetWidth; el.classList.add("pane-in");  // retrigger reveal
+  $("#sessionBar").classList.toggle("hidden", key==="connect" || !me);
+  if(key==="name" || key==="files") formStep = key;
+  updateStepper(key);
+}
+
 /* ---------- token auth ---------- */
-function signOut(){ token=null; me=null; sessionStorage.removeItem("gh_token"); render(); }
+function signOut(){ token=null; me=null; sessionStorage.removeItem("gh_token"); formStep="name"; render(); }
 
 async function connectToken(){
   const val = $("#tokenInput").value.trim();
@@ -240,6 +410,7 @@ async function connectToken(){
     sessionStorage.setItem("gh_token", token);
     err.textContent = "";
     $("#tokenInput").value = "";
+    formStep = "name";
     render();
   }catch(e){
     token = prev; me = null;
@@ -383,7 +554,7 @@ function renderFiles(){
   files.sort((a,b)=>a.path.localeCompare(b.path));
   for(const f of files){
     const li=document.createElement("li");
-    li.innerHTML=`<span class="path"></span><span class="tag">${f.kind}</span><button class="rm" title="Remove">×</button>`;
+    li.innerHTML=`<span class="path"></span><span class="tag ${f.kind}">${f.kind}</span><button class="rm" title="Remove">×</button>`;
     li.querySelector(".path").textContent=f.path;
     li.querySelector(".rm").onclick=()=>{ files.splice(files.indexOf(f),1); renderFiles(); };
     ul.appendChild(li);
@@ -413,9 +584,9 @@ function logLine(cls, text){ const d=document.createElement("div"); d.className=
 
 async function publish(){
   const name = sanitizeName($("#repoName").value);
-  show("#stepForm", false); show("#stepWork", true);
-  $("#log").innerHTML=""; $("#links").innerHTML=""; $("#againRow").innerHTML="";
-  $("#workTitle").innerHTML = `<span class="step-no">●</span> Building <b style="margin-left:6px">${name}</b>…`;
+  showPane("build");
+  $("#log").innerHTML=""; $("#links").innerHTML=""; $("#againRow").innerHTML=""; $("#buildStatus").classList.add("hidden");
+  $("#workTitle").textContent = `Building ${name}…`;
 
   const owner = me.login;
   const web_yml = (typeof window.__WEB_YML_B64__ === "string") ? atob(window.__WEB_YML_B64__) : null;
@@ -464,7 +635,7 @@ async function publish(){
 
     logLine("ok","Build started — it takes a few minutes.");
     try{ localStorage.setItem("ofUploaderHidden","1"); }catch(e){}  // hide the "publish" button on the demo
-    $("#workTitle").innerHTML = `<span class="step-no" style="background:var(--accent-2);color:var(--accent-ink);border-color:transparent">✓</span> Your project is building!`;
+    $("#workTitle").textContent = "✓ Your project is building!";
 
     const repoUrl=`https://github.com/${owner}/${name}`;
     const actionsUrl=`${repoUrl}/actions`;
@@ -477,7 +648,7 @@ async function publish(){
       link("Your live sketch", liveUrl, liveUrl, "Ready in a few minutes (refresh if blank).") +
       link("Your repository", repoUrl, repoUrl, "");
     const again=document.createElement("button"); again.className="btn-ghost"; again.textContent="Publish another sketch";
-    again.onclick=()=>{ files.length=0; skipped.length=0; renderFiles(); show("#stepWork",false); show("#stepForm",true); };
+    again.onclick=()=>{ files.length=0; skipped.length=0; renderFiles(); showPane("name"); };
     $("#againRow").appendChild(again);
 
     if(pagesOk) pollBuild(owner, name, liveUrl, actionsUrl);   // live "Building… → Live!" status
@@ -488,14 +659,14 @@ async function publish(){
       msg = "You already have a repository with that name — pick another name.";
     if(/workflow/i.test(msg) && e.status) msg = "GitHub blocked the workflow file. Your token needs the 'workflow' scope — make a new token with it ticked.";
     logLine("err","✗ "+msg);
-    const retry=document.createElement("button"); retry.className="btn-ghost"; retry.textContent="Back";
-    retry.onclick=()=>{ show("#stepWork",false); show("#stepForm",true); };
+    const retry=document.createElement("button"); retry.className="btn-ghost"; retry.textContent="← Back";
+    retry.onclick=()=>{ showPane("files"); };
     $("#againRow").appendChild(retry);
   }
 }
 function link(lbl, href, url, sub){
   return `<a href="${href}" target="_blank" rel="noopener"><span class="lbl">${lbl}</span>`+
-    (sub?`<span class="muted" style="font-size:12.5px;margin-left:10px">${sub}</span>`:"")+
+    (sub?`<span class="muted" style="font-size:12px;margin-left:10px">${sub}</span>`:"")+
     `<span class="url">${url.replace(/^https:\/\//,"")}</span></a>`;
 }
 
@@ -538,12 +709,13 @@ function pollBuild(owner, name, liveUrl, actionsUrl){
 async function render(){
   if(token && !me){ try{ me = await api("/user"); } catch{ token=null; sessionStorage.removeItem("gh_token"); } }
   if(token && me){
-    show("#stepAuth",false); show("#stepForm",true); show("#stepWork",false);
     $("#login").textContent = me.login; $("#avatar").src = me.avatar_url;
     updateUrlPreview();
+    const building = !$("#stepWork").classList.contains("hidden");
+    showPane(building ? "build" : (formStep || "name"));
   }else{
-    show("#stepAuth",true); show("#stepForm",false); show("#stepWork",false);
     $("#tokenLink").href = TOKEN_URL;
+    showPane("connect");
   }
 }
 function updateUrlPreview(){
@@ -561,6 +733,8 @@ function wireZone(sel, forceKind, pickSel){
 }
 window.addEventListener("DOMContentLoaded", async ()=>{
   $("#signOut").onclick=signOut;
+  $("#toFiles").onclick=()=>showPane("files");
+  $("#backName").onclick=()=>showPane("name");
   $("#publish").onclick=publish;
   $("#repoName").addEventListener("input", updateUrlPreview);
   wireZone("#dropSrc", null,  "#pickSrc");
@@ -572,6 +746,7 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   $("#pickData").onchange   =e=>{ addFileList(e.target.files, "data"); e.target.value=""; };
   $("#tokenGo").onclick=connectToken;
   $("#tokenInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); connectToken(); } });
+  $("#repoName").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); showPane("files"); } });
   await render();
 });
 </script>

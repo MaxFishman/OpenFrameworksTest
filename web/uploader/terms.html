@@ -5,105 +5,153 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Terms of Service · openFrameworks Uploader</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNmZjNjNjQiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMCAyMC40KSBzY2FsZSgwLjQpIiBmaWxsPSIjZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik01OCAyOUM1OCAxMyA0NSAwIDI5IDAgMTMgMCAwIDEzIDAgMjkgMCA0NSAxMyA1OCAyOSA1OCA0NSA1OCA1OCA0NSA1OCAyOVoiLz48cmVjdCB4PSI1OSIgd2lkdGg9IjI1IiBoZWlnaHQ9IjU4Ii8+PHJlY3QgeD0iODUiIHk9IjI2IiB3aWR0aD0iMTUiIGhlaWdodD0iMTUiLz48cGF0aCBkPSJNODUgMCAxMTAgMCA4NSAyNSA4NSAwWiIvPjwvZz48L3N2Zz4K">
-<meta name="theme-color" content="#0e0e13">
+<meta name="theme-color" content="#0b0e14">
 <style>
   :root{
-    --bg:#0e0e13; --panel:#16161d; --panel-2:#1d1d26; --line:#2a2a36;
-    --ink:#f3f1ee; --muted:#9a98a6; --faint:#6b6a78;
-    --accent:#ff3d6e; --radius:14px; --maxw:720px;
-    font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --bg:#0b0e14; --bg-2:#0e121b; --panel:#11151e; --panel-2:#161b26;
+    --line:#232a37; --line-2:#2e3749;
+    --ink:#d8e0ee; --muted:#8a93a6; --faint:#515b6d;
+    --kw:#ff5c8a; --str:#9ece6a; --fn:#7aa2f7; --num:#ff9e64; --cmt:#5c6a7e;
+    --radius:12px; --maxw:720px;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    font-family:var(--mono);
   }
   *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
   html,body{margin:0;background:var(--bg);color:var(--ink);min-height:100%}
-  body{line-height:1.6;-webkit-font-smoothing:antialiased;
+  body{line-height:1.65;-webkit-font-smoothing:antialiased;
     background:
-      radial-gradient(900px 500px at 85% -10%, rgba(255,61,110,.14), transparent 60%),
-      radial-gradient(800px 500px at 10% 110%, rgba(87,227,141,.10), transparent 55%),
-      var(--bg);}
+      radial-gradient(1100px 600px at 88% -12%, rgba(255,92,138,.10), transparent 60%),
+      radial-gradient(900px 600px at 6% 112%, rgba(122,162,247,.08), transparent 58%),
+      var(--bg);
+    background-attachment:fixed;}
+
+  /* scroll-driven reading progress */
+  .scrollbar{position:fixed;top:0;left:0;right:0;height:3px;transform-origin:0 50%;transform:scaleX(0);
+    background:linear-gradient(90deg,var(--kw),var(--fn));z-index:50}
+  @supports (animation-timeline:scroll()){
+    .scrollbar{animation:sb-grow linear both;animation-timeline:scroll(root block)}
+    @keyframes sb-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  }
+
   .wrap{max-width:var(--maxw);margin:0 auto;padding:40px 22px 80px}
-  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
-    font-weight:700;margin:0 0 14px}
-  h1{font-size:clamp(28px,5vw,40px);line-height:1.06;margin:0 0 8px;font-weight:800;letter-spacing:-.02em}
-  .updated{color:var(--faint);font-size:13px;margin:0 0 30px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;margin:16px 0}
-  h2{font-size:19px;font-weight:700;margin:28px 0 10px;letter-spacing:-.01em}
+  .back{display:inline-block;margin-bottom:22px;color:var(--fn);font-weight:600;text-decoration:none;font-size:13px}
+  .back:hover{text-decoration:underline}
+  .eyebrow{font-size:12.5px;color:var(--cmt);margin:0 0 12px}
+  h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:0 0 8px;font-weight:700;letter-spacing:-.01em}
+  h1 .kw{color:var(--kw)}
+  .updated{color:var(--faint);font-size:12.5px;margin:0 0 30px}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px}
+  section.block{margin:16px 0}
+  h2{font-size:16px;font-weight:700;margin:26px 0 9px;letter-spacing:-.01em;color:var(--ink)}
   h2:first-child{margin-top:0}
-  p,li{color:var(--muted);font-size:15.5px}
-  a{color:var(--accent);font-weight:600;text-decoration:none}
-  a:hover{text-decoration:underline}
-  ul{padding-left:20px}
-  li{margin:6px 0}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink)}
+  h2 .n{color:var(--num);font-weight:700;margin-right:6px}
+  p,li{color:var(--muted);font-size:14.5px;font-family:var(--sans);line-height:1.7}
+  a{color:var(--fn);font-weight:600;text-decoration:none} a:hover{text-decoration:underline}
+  ul{padding-left:20px} li{margin:6px 0}
   b{color:var(--ink)}
-  footer{margin-top:40px;color:var(--faint);font-size:12.5px;text-align:center}
-  footer a{color:var(--muted)}
-  .back{display:inline-block;margin-bottom:24px;color:var(--muted);font-weight:600}
+  footer{margin-top:36px;color:var(--faint);font-size:12px;text-align:center}
+  footer a{color:var(--fn);text-decoration:none} footer a:hover{text-decoration:underline}
+
+  /* scroll-driven reveal with safe fallback */
+  .reveal{opacity:1;transform:none}
+  @supports (animation-timeline:view()){
+    .reveal{animation:reveal-up linear both;animation-timeline:view();animation-range:entry 0% entry 42%}
+    @keyframes reveal-up{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .reveal{animation:none!important;opacity:1!important;transform:none!important}
+  }
 </style>
 </head>
 <body>
+<div class="scrollbar" aria-hidden="true"></div>
 <div class="wrap">
-  <a class="back" href="index.html">&larr; Back to the uploader</a>
-  <p class="eyebrow">openFrameworks → the web</p>
-  <h1>Terms of Service</h1>
+  <a class="back" href="index.html">← back to the uploader</a>
+  <p class="eyebrow">// openframeworks uploader · legal</p>
+  <h1>Terms of <span class="kw">Service</span></h1>
   <p class="updated">Last updated: 21 October 2026</p>
 
   <div class="card">
-    <h2>1. Acceptance of terms</h2>
-    <p>By using the openFrameworks Uploader ("the App"), you agree to these Terms of Service. If you
-      do not agree, please do not use the App. The App is provided as a free, educational tool for
-      publishing openFrameworks sketches to the web.</p>
+    <section class="block reveal">
+      <h2><span class="n">01</span>Acceptance of terms</h2>
+      <p>By using the openFrameworks Uploader ("the App"), you agree to these Terms of Service. If you
+        do not agree, please do not use the App. The App is provided as a free, educational tool for
+        publishing openFrameworks sketches to the web.</p>
+    </section>
 
-    <h2>2. What the App does</h2>
-    <p>The App runs in your browser and helps you create a GitHub repository and a GitHub Pages site
-      from source files you provide, using a GitHub access token you supply. The App does not host
-      your content; your content lives on GitHub under your own account.</p>
+    <section class="block reveal">
+      <h2><span class="n">02</span>What the App does</h2>
+      <p>The App runs in your browser and helps you create a GitHub repository and a GitHub Pages site
+        from source files you provide, using a GitHub access token you supply. The App does not host
+        your content; your content lives on GitHub under your own account.</p>
+    </section>
 
-    <h2>3. Your account and token</h2>
-    <p>You are responsible for the GitHub access token you paste into the App and for all activity
-      performed with it. Keep your token confidential, use the minimum permissions needed, and
-      revoke it when you are finished. You must comply with
-      <a href="https://docs.github.com/en/site-policy/github-terms/github-terms-of-service" target="_blank" rel="noopener">GitHub's Terms of Service</a>
-      when using GitHub through the App.</p>
+    <section class="block reveal">
+      <h2><span class="n">03</span>Your account and token</h2>
+      <p>You are responsible for the GitHub access token you paste into the App and for all activity
+        performed with it. Keep your token confidential, use the minimum permissions needed, and
+        revoke it when you are finished. You must comply with
+        <a href="https://docs.github.com/en/site-policy/github-terms/github-terms-of-service" target="_blank" rel="noopener">GitHub's Terms of Service</a>
+        when using GitHub through the App.</p>
+    </section>
 
-    <h2>4. Acceptable use</h2>
-    <p>You agree not to use the App to:</p>
-    <ul>
-      <li>Upload or publish content that is unlawful, infringing, defamatory, or that violates the
-        rights of others;</li>
-      <li>Upload malware, or code intended to harm, disrupt, or gain unauthorized access to any
-        system;</li>
-      <li>Violate GitHub's terms, acceptable use policies, or applicable laws and regulations;</li>
-      <li>Attempt to misuse, overload, reverse engineer, or interfere with the App.</li>
-    </ul>
+    <section class="block reveal">
+      <h2><span class="n">04</span>Acceptable use</h2>
+      <p>You agree not to use the App to:</p>
+      <ul>
+        <li>Upload or publish content that is unlawful, infringing, defamatory, or that violates the
+          rights of others;</li>
+        <li>Upload malware, or code intended to harm, disrupt, or gain unauthorized access to any
+          system;</li>
+        <li>Violate GitHub's terms, acceptable use policies, or applicable laws and regulations;</li>
+        <li>Attempt to misuse, overload, reverse engineer, or interfere with the App.</li>
+      </ul>
+    </section>
 
-    <h2>5. Your content</h2>
-    <p>You retain all rights to the files and code you upload. You represent that you have the right
-      to publish them. Because the App creates <b>public</b> repositories and public web pages, any
-      content you publish will be publicly visible, and you are solely responsible for it.</p>
+    <section class="block reveal">
+      <h2><span class="n">05</span>Your content</h2>
+      <p>You retain all rights to the files and code you upload. You represent that you have the right
+        to publish them. Because the App creates <b>public</b> repositories and public web pages, any
+        content you publish will be publicly visible, and you are solely responsible for it.</p>
+    </section>
 
-    <h2>6. Intellectual property</h2>
-    <p>openFrameworks, GitHub, Emscripten, and other referenced names and marks belong to their
-      respective owners. The App is an independent educational tool and is not endorsed by or
-      affiliated with those projects.</p>
+    <section class="block reveal">
+      <h2><span class="n">06</span>Intellectual property</h2>
+      <p>openFrameworks, GitHub, Emscripten, and other referenced names and marks belong to their
+        respective owners. The App is an independent educational tool and is not endorsed by or
+        affiliated with those projects.</p>
+    </section>
 
-    <h2>7. No warranty</h2>
-    <p>The App is provided <b>"as is"</b> and <b>"as available"</b>, without warranties of any kind,
-      express or implied, including fitness for a particular purpose, availability, or that it will
-      be error-free or uninterrupted. Builds depend on third-party services (GitHub, Emscripten) that
-      may change or fail at any time.</p>
+    <section class="block reveal">
+      <h2><span class="n">07</span>No warranty</h2>
+      <p>The App is provided <b>"as is"</b> and <b>"as available"</b>, without warranties of any kind,
+        express or implied, including fitness for a particular purpose, availability, or that it will
+        be error-free or uninterrupted. Builds depend on third-party services (GitHub, Emscripten) that
+        may change or fail at any time.</p>
+    </section>
 
-    <h2>8. Limitation of liability</h2>
-    <p>To the fullest extent permitted by law, the App's maintainers shall not be liable for any
-      indirect, incidental, special, or consequential damages, or any loss of data, repositories,
-      or content, arising from your use of the App.</p>
+    <section class="block reveal">
+      <h2><span class="n">08</span>Limitation of liability</h2>
+      <p>To the fullest extent permitted by law, the App's maintainers shall not be liable for any
+        indirect, incidental, special, or consequential damages, or any loss of data, repositories,
+        or content, arising from your use of the App.</p>
+    </section>
 
-    <h2>9. Changes</h2>
-    <p>We may update these Terms as the App evolves. Continued use after changes means you accept the
-      updated Terms. Material changes will be reflected by the "Last updated" date above.</p>
+    <section class="block reveal">
+      <h2><span class="n">09</span>Changes</h2>
+      <p>We may update these Terms as the App evolves. Continued use after changes means you accept the
+        updated Terms. Material changes will be reflected by the "Last updated" date above.</p>
+    </section>
 
-    <h2>10. Contact</h2>
-    <p>Questions about these Terms can be directed to the project maintainers,
-      Max Fishman and Luisa Pinzon (Executive Directors — Digital Arts).</p>
+    <section class="block reveal">
+      <h2><span class="n">10</span>Contact</h2>
+      <p>Questions about these Terms can be directed to the project maintainers,
+        Max Fishman and Luisa Pinzon (Executive Directors — Digital Arts).</p>
+    </section>
   </div>
 
   <footer>

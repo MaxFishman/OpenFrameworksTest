@@ -5,97 +5,142 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy Policy · openFrameworks Uploader</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNmZjNjNjQiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMCAyMC40KSBzY2FsZSgwLjQpIiBmaWxsPSIjZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik01OCAyOUM1OCAxMyA0NSAwIDI5IDAgMTMgMCAwIDEzIDAgMjkgMCA0NSAxMyA1OCAyOSA1OCA0NSA1OCA1OCA0NSA1OCAyOVoiLz48cmVjdCB4PSI1OSIgd2lkdGg9IjI1IiBoZWlnaHQ9IjU4Ii8+PHJlY3QgeD0iODUiIHk9IjI2IiB3aWR0aD0iMTUiIGhlaWdodD0iMTUiLz48cGF0aCBkPSJNODUgMCAxMTAgMCA4NSAyNSA4NSAwWiIvPjwvZz48L3N2Zz4K">
-<meta name="theme-color" content="#0e0e13">
+<meta name="theme-color" content="#0b0e14">
 <style>
   :root{
-    --bg:#0e0e13; --panel:#16161d; --panel-2:#1d1d26; --line:#2a2a36;
-    --ink:#f3f1ee; --muted:#9a98a6; --faint:#6b6a78;
-    --accent:#ff3d6e; --radius:14px; --maxw:720px;
-    font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --bg:#0b0e14; --bg-2:#0e121b; --panel:#11151e; --panel-2:#161b26;
+    --line:#232a37; --line-2:#2e3749;
+    --ink:#d8e0ee; --muted:#8a93a6; --faint:#515b6d;
+    --kw:#ff5c8a; --str:#9ece6a; --fn:#7aa2f7; --num:#ff9e64; --cmt:#5c6a7e;
+    --radius:12px; --maxw:720px;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    font-family:var(--mono);
   }
   *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
   html,body{margin:0;background:var(--bg);color:var(--ink);min-height:100%}
-  body{line-height:1.6;-webkit-font-smoothing:antialiased;
+  body{line-height:1.65;-webkit-font-smoothing:antialiased;
     background:
-      radial-gradient(900px 500px at 85% -10%, rgba(255,61,110,.14), transparent 60%),
-      radial-gradient(800px 500px at 10% 110%, rgba(87,227,141,.10), transparent 55%),
-      var(--bg);}
+      radial-gradient(1100px 600px at 88% -12%, rgba(255,92,138,.10), transparent 60%),
+      radial-gradient(900px 600px at 6% 112%, rgba(122,162,247,.08), transparent 58%),
+      var(--bg);
+    background-attachment:fixed;}
+
+  /* scroll-driven reading progress */
+  .scrollbar{position:fixed;top:0;left:0;right:0;height:3px;transform-origin:0 50%;transform:scaleX(0);
+    background:linear-gradient(90deg,var(--kw),var(--fn));z-index:50}
+  @supports (animation-timeline:scroll()){
+    .scrollbar{animation:sb-grow linear both;animation-timeline:scroll(root block)}
+    @keyframes sb-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  }
+
   .wrap{max-width:var(--maxw);margin:0 auto;padding:40px 22px 80px}
-  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
-    font-weight:700;margin:0 0 14px}
-  h1{font-size:clamp(28px,5vw,40px);line-height:1.06;margin:0 0 8px;font-weight:800;letter-spacing:-.02em}
-  .updated{color:var(--faint);font-size:13px;margin:0 0 30px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;margin:16px 0}
-  h2{font-size:19px;font-weight:700;margin:28px 0 10px;letter-spacing:-.01em}
+  .back{display:inline-block;margin-bottom:22px;color:var(--fn);font-weight:600;text-decoration:none;font-size:13px}
+  .back:hover{text-decoration:underline}
+  .eyebrow{font-size:12.5px;color:var(--cmt);margin:0 0 12px}
+  h1{font-size:clamp(28px,5vw,40px);line-height:1.08;margin:0 0 8px;font-weight:700;letter-spacing:-.01em}
+  h1 .kw{color:var(--kw)}
+  .updated{color:var(--faint);font-size:12.5px;margin:0 0 30px}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px}
+  section.block{margin:16px 0}
+  h2{font-size:16px;font-weight:700;margin:26px 0 9px;letter-spacing:-.01em;color:var(--ink)}
   h2:first-child{margin-top:0}
-  p,li{color:var(--muted);font-size:15.5px}
-  a{color:var(--accent);font-weight:600;text-decoration:none}
-  a:hover{text-decoration:underline}
-  ul{padding-left:20px}
-  li{margin:6px 0}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink)}
+  h2::before{content:"// ";color:var(--cmt);font-weight:400}
+  p,li{color:var(--muted);font-size:14.5px;font-family:var(--sans);line-height:1.7}
+  a{color:var(--fn);font-weight:600;text-decoration:none} a:hover{text-decoration:underline}
+  ul{padding-left:20px} li{margin:6px 0}
+  .mono{font-family:var(--mono);color:var(--num);font-size:13px}
   b{color:var(--ink)}
-  footer{margin-top:40px;color:var(--faint);font-size:12.5px;text-align:center}
-  footer a{color:var(--muted)}
-  .back{display:inline-block;margin-bottom:24px;color:var(--muted);font-weight:600}
+  footer{margin-top:36px;color:var(--faint);font-size:12px;text-align:center}
+  footer a{color:var(--fn);text-decoration:none} footer a:hover{text-decoration:underline}
+
+  /* scroll-driven reveal (skill: view-timeline) with safe fallback */
+  .reveal{opacity:1;transform:none}
+  @supports (animation-timeline:view()){
+    .reveal{animation:reveal-up linear both;animation-timeline:view();animation-range:entry 0% entry 42%}
+    @keyframes reveal-up{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .reveal{animation:none!important;opacity:1!important;transform:none!important}
+  }
 </style>
 </head>
 <body>
+<div class="scrollbar" aria-hidden="true"></div>
 <div class="wrap">
-  <a class="back" href="index.html">&larr; Back to the uploader</a>
-  <p class="eyebrow">openFrameworks → the web</p>
-  <h1>Privacy Policy</h1>
+  <a class="back" href="index.html">← back to the uploader</a>
+  <p class="eyebrow">// openframeworks uploader · legal</p>
+  <h1>Privacy <span class="kw">Policy</span></h1>
   <p class="updated">Last updated: 21 October 2026</p>
 
   <div class="card">
-    <h2>Overview</h2>
-    <p>The openFrameworks Uploader ("the App") is a browser-based tool that helps you publish an
-      openFrameworks sketch to your own GitHub account. It runs entirely in your browser. We do not
-      operate a server that stores your data, and we do not sell, rent, or share any personal
-      information. This policy explains what the App touches and why.</p>
+    <section class="block reveal">
+      <h2>Overview</h2>
+      <p>The openFrameworks Uploader ("the App") is a browser-based tool that helps you publish an
+        openFrameworks sketch to your own GitHub account. It runs entirely in your browser. We do not
+        operate a server that stores your data, and we do not sell, rent, or share any personal
+        information. This policy explains what the App touches and why.</p>
+    </section>
 
-    <h2>What we collect</h2>
-    <p>The App itself collects <b>nothing</b> on a server of ours. Specifically:</p>
-    <ul>
-      <li><b>GitHub access token</b> — the token you paste is held only in your browser tab
-        (<span class="mono">sessionStorage</span>) for the length of your session. It is sent
-        directly to GitHub to create your repository and is never transmitted to us. Closing the
-        tab or signing out erases it.</li>
-      <li><b>Your source files</b> — the files you drop in are read in your browser and uploaded
-        directly to <b>your</b> GitHub repository. They do not pass through any server we control.</li>
-      <li><b>No analytics, cookies, or tracking</b> — the App sets no advertising cookies and runs
-        no third-party analytics or trackers.</li>
-    </ul>
+    <section class="block reveal">
+      <h2>What we collect</h2>
+      <p>The App itself collects <b>nothing</b> on a server of ours. Specifically:</p>
+      <ul>
+        <li><b>GitHub access token</b> — the token you paste is held only in your browser tab
+          (<span class="mono">sessionStorage</span>) for the length of your session. It is sent
+          directly to GitHub to create your repository and is never transmitted to us. Closing the
+          tab or signing out erases it.</li>
+        <li><b>Your source files</b> — the files you drop in are read in your browser and uploaded
+          directly to <b>your</b> GitHub repository. They do not pass through any server we control.</li>
+        <li><b>No analytics, cookies, or tracking</b> — the App sets no advertising cookies and runs
+          no third-party analytics or trackers.</li>
+      </ul>
+    </section>
 
-    <h2>Third-party services</h2>
-    <p>To do its job, the App talks directly to <b>GitHub</b> (the GitHub API and GitHub Pages) using
-      the token you provide. Your use of GitHub is governed by GitHub's own
-      <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">Privacy Statement</a>
-      and <a href="https://docs.github.com/en/site-policy/github-terms/github-terms-of-service" target="_blank" rel="noopener">Terms of Service</a>.
-      Anything you publish becomes a public repository and public web page on GitHub, subject to
-      their policies.</p>
+    <section class="block reveal">
+      <h2>Third-party services</h2>
+      <p>To do its job, the App talks directly to <b>GitHub</b> (the GitHub API and GitHub Pages) using
+        the token you provide. Your use of GitHub is governed by GitHub's own
+        <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">Privacy Statement</a>
+        and <a href="https://docs.github.com/en/site-policy/github-terms/github-terms-of-service" target="_blank" rel="noopener">Terms of Service</a>.
+        Anything you publish becomes a public repository and public web page on GitHub, subject to
+        their policies.</p>
+    </section>
 
-    <h2>Data you publish is public</h2>
-    <p>By design, the App creates a <b>public</b> repository and a public GitHub Pages site. Do not
-      upload secrets, credentials, personal data, or anything you do not intend to make public.</p>
+    <section class="block reveal">
+      <h2>Data you publish is public</h2>
+      <p>By design, the App creates a <b>public</b> repository and a public GitHub Pages site. Do not
+        upload secrets, credentials, personal data, or anything you do not intend to make public.</p>
+    </section>
 
-    <h2>Security</h2>
-    <p>Your token is stored only in the current browser tab and is used solely for direct,
-      encrypted (HTTPS) requests to GitHub. You can revoke the token at any time from your
-      <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">GitHub token settings</a>.
-      We recommend giving tokens a short expiration.</p>
+    <section class="block reveal">
+      <h2>Security</h2>
+      <p>Your token is stored only in the current browser tab and is used solely for direct,
+        encrypted (HTTPS) requests to GitHub. You can revoke the token at any time from your
+        <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">GitHub token settings</a>.
+        We recommend giving tokens a short expiration.</p>
+    </section>
 
-    <h2>Children's privacy</h2>
-    <p>The App is intended for students and educators in a course setting. It is not directed at
-      children under 13, and we do not knowingly collect personal information from them.</p>
+    <section class="block reveal">
+      <h2>Children's privacy</h2>
+      <p>The App is intended for students and educators in a course setting. It is not directed at
+        children under 13, and we do not knowingly collect personal information from them.</p>
+    </section>
 
-    <h2>Changes to this policy</h2>
-    <p>We may update this policy as the App evolves. Material changes will be reflected by the
-      "Last updated" date above.</p>
+    <section class="block reveal">
+      <h2>Changes to this policy</h2>
+      <p>We may update this policy as the App evolves. Material changes will be reflected by the
+        "Last updated" date above.</p>
+    </section>
 
-    <h2>Contact</h2>
-    <p>Questions about this policy can be directed to the project maintainers,
-      Max Fishman and Luisa Pinzon (Executive Directors — Digital Arts).</p>
+    <section class="block reveal">
+      <h2>Contact</h2>
+      <p>Questions about this policy can be directed to the project maintainers,
+        Max Fishman and Luisa Pinzon (Executive Directors — Digital Arts).</p>
+    </section>
   </div>
 
   <footer>
