@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Publish your openFrameworks sketch</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNmZjNjNjQiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMCAyMC40KSBzY2FsZSgwLjQpIiBmaWxsPSIjZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik01OCAyOUM1OCAxMyA0NSAwIDI5IDAgMTMgMCAwIDEzIDAgMjkgMCA0NSAxMyA1OCAyOSA1OCA0NSA1OCA1OCA0NSA1OCAyOVoiLz48cmVjdCB4PSI1OSIgd2lkdGg9IjI1IiBoZWlnaHQ9IjU4Ii8+PHJlY3QgeD0iODUiIHk9IjI2IiB3aWR0aD0iMTUiIGhlaWdodD0iMTUiLz48cGF0aCBkPSJNODUgMCAxMTAgMCA4NSAyNSA4NSAwWiIvPjwvZz48L3N2Zz4K">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<meta name="theme-color" content="#0e0e13">
+<script src="sw.js"></script>
 <!-- Generated at build time: window.__WEB_YML_B64__ = the current web.yml, so student
      repos always get the up-to-date workflow. Loaded defensively (may be absent in dev). -->
 <script src="workflow.js"></script>
@@ -84,6 +88,16 @@
   .log div.ok::before{content:"✓ ";color:var(--accent-2)}
   .log div.run::before{content:"• ";color:var(--accent)}
   .log div.err{color:#ff8098}
+  .buildstat{display:flex;align-items:center;gap:11px;margin-top:12px;padding:13px 15px;border-radius:11px;
+    background:var(--panel-2);border:1px solid var(--line);font-size:14px}
+  .buildstat.ok{border-color:rgba(87,227,141,.5)}
+  .buildstat.err{border-color:rgba(255,61,110,.5)}
+  .buildstat .spin{width:16px;height:16px;flex:none;border-radius:50%;
+    border:2px solid rgba(255,255,255,.18);border-top-color:var(--accent);animation:spin .8s linear infinite}
+  .buildstat .ico{font-weight:800;flex:none}
+  .buildstat.ok .ico{color:var(--accent-2)} .buildstat.err .ico{color:var(--accent)}
+  .buildstat a{color:var(--accent);font-weight:700;text-decoration:none} .buildstat a:hover{text-decoration:underline}
+  @keyframes spin{to{transform:rotate(360deg)}}
   .links a{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;
     background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin-top:9px}
   .links a:hover{border-color:var(--accent)}
@@ -179,6 +193,7 @@
   <section id="stepWork" class="card hidden">
     <div class="step-head" id="workTitle"><span class="step-no">●</span> Building your project…</div>
     <div class="log" id="log"></div>
+    <div class="buildstat hidden" id="buildStatus"></div>
     <div class="links" id="links"></div>
     <div class="row" id="againRow" style="margin-top:18px"></div>
   </section>
@@ -456,6 +471,8 @@ async function publish(){
     again.onclick=()=>{ files.length=0; skipped.length=0; renderFiles(); show("#stepWork",false); show("#stepForm",true); };
     $("#againRow").appendChild(again);
 
+    if(pagesOk) pollBuild(owner, name, liveUrl, actionsUrl);   // live "Building… → Live!" status
+
   }catch(e){
     let msg = e.message || String(e);
     if(e.status===422 && /name already exists/i.test(e.data?.errors?.[0]?.message||msg))
@@ -471,6 +488,41 @@ function link(lbl, href, url, sub){
   return `<a href="${href}" target="_blank" rel="noopener"><span class="lbl">${lbl}</span>`+
     (sub?`<span class="muted" style="font-size:12.5px;margin-left:10px">${sub}</span>`:"")+
     `<span class="url">${url.replace(/^https:\/\//,"")}</span></a>`;
+}
+
+// Poll the Actions API so the student sees Building… → Live! without leaving the page.
+function pollBuild(owner, name, liveUrl, actionsUrl){
+  const el = $("#buildStatus"); if(!el) return;
+  el.classList.remove("hidden","ok","err");
+  let tries = 0;
+  async function tick(){
+    tries++;
+    let run = null;
+    try{
+      const r = await api(`/repos/${owner}/${name}/actions/runs?per_page=1`);
+      run = r.workflow_runs && r.workflow_runs[0];
+    }catch(e){ /* keep trying */ }
+
+    if(run && run.status === "completed"){
+      if(run.conclusion === "success"){
+        el.classList.add("ok");
+        el.innerHTML = `<span class="ico">✓</span><span>Your sketch is live! `+
+          `<a href="${liveUrl}" target="_blank" rel="noopener">Open it →</a> `+
+          `<span class="muted">(allow a few seconds the first time)</span></span>`;
+      }else{
+        el.classList.add("err");
+        el.innerHTML = `<span class="ico">!</span><span>The build didn't finish — `+
+          `<a href="${actionsUrl}" target="_blank" rel="noopener">see what happened →</a></span>`;
+      }
+      return;
+    }
+    const label = run && run.status === "in_progress" ? "Building your sketch…"
+                : run ? "Build queued…" : "Starting the build…";
+    el.innerHTML = `<span class="spin"></span><span>${label} <span class="muted">(usually a few minutes)</span></span>`;
+    if(tries < 150) setTimeout(tick, 6000);   // ~15 min, then stop polling
+    else el.innerHTML = `<span>Still building — <a href="${actionsUrl}" target="_blank" rel="noopener">watch on GitHub →</a></span>`;
+  }
+  tick();
 }
 
 /* ---------- render ---------- */

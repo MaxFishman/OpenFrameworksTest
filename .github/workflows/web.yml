@@ -36,8 +36,25 @@ jobs:
       - name: Start emscripten
         run: docker run -di --name emscripten -v "$PWD":/src emscripten/emsdk:4.0.4 bash
 
+      - name: Cache the compiled openFrameworks library
+        uses: actions/cache@v4
+        with:
+          path: |
+            of/libs/openFrameworksCompiled/lib/emscripten
+            of/libs/openFrameworksCompiled/project/emscripten/obj
+          key: of-emscripten-0.12.1-emsdk4.0.4-v1
+
       - name: Build openFrameworks for the web
         run: |
+          # If the compiled library was restored from cache, git-cloned sources are newer
+          # than the cached objects, which would make `make` recompile everything. Touch the
+          # cached outputs (objects, then lib) so make treats them as up to date and skips
+          # rebuilding openFrameworks — turning a ~4 min build into ~1 min.
+          if [ -d of/libs/openFrameworksCompiled/project/emscripten/obj ]; then
+            find of/libs/openFrameworksCompiled/project/emscripten/obj -type f -exec touch {} + 2>/dev/null || true
+            find of/libs/openFrameworksCompiled/lib/emscripten -type f -exec touch {} + 2>/dev/null || true
+            echo "restored cached openFrameworks build"
+          fi
           sed -i "s/PLATFORM_OPTIMIZATION_CFLAGS_DEBUG = .*/PLATFORM_OPTIMIZATION_CFLAGS_DEBUG = -g0/" of/libs/openFrameworksCompiled/project/emscripten/config.emscripten.default.mk
           docker exec -w /src/of/libs/openFrameworksCompiled/project emscripten emmake make -j4 Release
 
@@ -69,12 +86,33 @@ jobs:
 
       - name: Make the page work on GitHub Pages
         run: |
-          # openFrameworks web builds use threads, which need extra server headers.
-          # GitHub Pages can't set them, so this small helper script adds them in the browser.
+          # openFrameworks web builds use threads (SharedArrayBuffer), which need the
+          # cross-origin-isolation headers GitHub Pages can't set, so a service worker adds
+          # them in the browser. When web/sw.js is present (this repo) we use our combined
+          # worker that ALSO caches the sketch -> installable PWA + offline. Repos created by
+          # the uploader have no web/ dir, so they fall back to the stock coi-serviceworker,
+          # which just adds the headers (proven path; their sketches still work).
           OUT=of/apps/myApps/sketch/bin/em/sketch
+          if [ -f sketch/web/sw.js ]; then
+          cp sketch/web/sw.js "$OUT/sw.js"
+          sed -i "s/__SW_VERSION__/${GITHUB_SHA:-$(date +%s)}/" "$OUT/sw.js"
+          mkdir -p "$OUT/icons"
+          cp sketch/web/icons/icon-192.png sketch/web/icons/icon-512.png sketch/web/icons/apple-touch-icon.png sketch/web/icons/icon.svg "$OUT/icons/"
+          cat > "$OUT/manifest.webmanifest" <<'JSON'
+          { "name":"openFrameworks sketch", "short_name":"oF sketch", "start_url":"./", "scope":"./",
+          "display":"standalone", "background_color":"#0d0d11", "theme_color":"#0d0d11",
+          "icons":[ {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+          {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
+          {"src":"icons/icon.svg","sizes":"any","type":"image/svg+xml"} ] }
+          JSON
+          sed -i 's|<head>|<head>\n    <script src="sw.js"></script>\n    <link rel="manifest" href="manifest.webmanifest">\n    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">\n    <meta name="theme-color" content="#0d0d11">|' "$OUT/index.html"
+          echo "PWA service worker + manifest injected"
+          else
           curl -fsSL -o "$OUT/coi-serviceworker.min.js" https://unpkg.com/coi-serviceworker@0.1.7/coi-serviceworker.min.js
           sed -i 's#<head>#<head>\n    <script src="coi-serviceworker.min.js"></script>#' "$OUT/index.html"
-          grep -n "coi-serviceworker" "$OUT/index.html"
+          echo "coi-serviceworker injected (headers only)"
+          fi
+          grep -nE "sw\.js|coi-serviceworker|manifest" "$OUT/index.html" | head
           # Reskin the page: hide the default emscripten menu/output, center the sketch
           # on a dark stage, and keep one nice glass "Fullscreen" button. Also inject the
           # fullscreen fixes: CSS so a fullscreen canvas fills the screen, and a safe
@@ -128,9 +166,25 @@ jobs:
           @keyframes ofpulse{0%,100%{box-shadow:0 12px 46px rgba(255,61,110,.45),0 3px 14px rgba(0,0,0,.55)}
             50%{box-shadow:0 12px 66px rgba(255,61,110,.95),0 3px 14px rgba(0,0,0,.55)}}
           @media (prefers-reduced-motion:reduce){#ofUploadBtn{animation:none}}
+          /* loading overlay while the WebAssembly downloads/compiles */
+          #ofLoading{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;
+            align-items:center;justify-content:center;gap:22px;background:#0d0d11;transition:opacity .5s ease;}
+          #ofLoading.done{opacity:0;pointer-events:none;}
+          #ofLoading .of-mark{width:84px;height:84px;animation:ofbob 1.6s ease-in-out infinite;}
+          #ofLoading .of-bar{width:min(260px,60vw);height:6px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden;}
+          #ofLoading .of-fill{height:100%;width:0;background:#ff3d6e;border-radius:999px;transition:width .3s ease;}
+          #ofLoading .of-label{color:#9a98a6;letter-spacing:.04em;
+            font:600 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;}
+          @keyframes ofbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+          @media (prefers-reduced-motion:reduce){#ofLoading .of-mark{animation:none}}
           </style>
           </head>"""
-          script = """  <a id="ofUploadBtn" href="https://maxfishman.github.io/OpenFrameworksTest/uploader/" title="Publish your own openFrameworks sketch">
+          script = """  <div id="ofLoading">
+          <div class="of-mark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#ff3c64"/><g transform="translate(10 20.4) scale(0.4)" fill="#fff" fill-rule="evenodd"><path d="M58 29C58 13 45 0 29 0 13 0 0 13 0 29 0 45 13 58 29 58 45 58 58 45 58 29Z"/><rect x="59" width="25" height="58"/><rect x="85" y="26" width="15" height="15"/><path d="M85 0 110 0 85 25 85 0Z"/></g></svg></div>
+          <div class="of-bar"><div class="of-fill" id="ofFill"></div></div>
+          <div class="of-label" id="ofLabel">Loading sketch&#8230;</div>
+          </div>
+          <a id="ofUploadBtn" href="https://maxfishman.github.io/OpenFrameworksTest/uploader/" title="Publish your own openFrameworks sketch">
           <span>Click here to encode for web</span>
           <span class="x" id="ofUploadHide" role="button" aria-label="Hide" title="Hide">&times;</span>
           </a>
@@ -164,6 +218,29 @@ jobs:
               try{ localStorage.setItem(KEY,'1'); }catch(e){}
             });
           })();
+          (function(){
+            var ov=document.getElementById('ofLoading'); if(!ov) return;
+            var fill=document.getElementById('ofFill'), label=document.getElementById('ofLabel');
+            var st=document.getElementById('status'), pr=document.getElementById('progress');
+            var started=false, done=false;
+            function hide(){ if(done) return; done=true; if(fill) fill.style.width='100%';
+              ov.classList.add('done'); setTimeout(function(){ if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); },600); }
+            function upd(){
+              if(done) return;
+              var txt = st ? (st.textContent||'') : '';
+              if(txt){ started=true; if(label) label.textContent=txt; }
+              if(pr && pr.max){ if(fill) fill.style.width=Math.min(100,(pr.value/pr.max)*100)+'%'; }
+              else { var m=txt.match(/\\((\\d+(?:\\.\\d+)?)\\/(\\d+)\\)/); if(m&&fill) fill.style.width=Math.min(100,(parseFloat(m[1])/parseFloat(m[2]))*100)+'%'; }
+              if(/complete/i.test(txt)) setTimeout(hide,1500);     // backup trigger
+              if(started && txt===''){ hide(); }                   // emscripten clears status when the app starts
+            }
+            try{ var mo=new MutationObserver(upd);
+              if(st) mo.observe(st,{childList:true,characterData:true,subtree:true});
+              if(pr) mo.observe(pr,{attributes:true}); }catch(e){}
+            var iv=setInterval(upd,250);
+            setTimeout(function(){ clearInterval(iv); hide(); },180000);
+            upd();
+          })();
           </script>
           </body>"""
           s = open(p).read()
@@ -181,6 +258,10 @@ jobs:
           if [ -d sketch/web/uploader ]; then
             mkdir -p "$OUT/uploader"
             cp -r sketch/web/uploader/. "$OUT/uploader/"
+            # stamp the uploader service worker so its cache busts on each deploy
+            if [ -f "$OUT/uploader/sw.js" ]; then
+              sed -i "s/__SW_VERSION__/${GITHUB_SHA:-$(date +%s)}/" "$OUT/uploader/sw.js"
+            fi
             # bundle the CURRENT workflow so repos created by the uploader get all the fixes
             B64=$(base64 -w0 sketch/.github/workflows/web.yml)
             printf 'window.__WEB_YML_B64__=%s;\n' "\"$B64\"" > "$OUT/uploader/workflow.js"
