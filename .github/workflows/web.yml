@@ -1,0 +1,95 @@
+name: Build for the web
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Get the sketch
+        uses: actions/checkout@v4
+        with:
+          path: sketch
+
+      - name: Get openFrameworks 0.12.1
+        run: git clone --depth 1 --branch 0.12.1 https://github.com/openframeworks/openFrameworks.git of
+
+      - name: Download openFrameworks web libraries
+        run: ./of/scripts/emscripten/download_libs.sh
+
+      - name: Start emscripten
+        run: docker run -di --name emscripten -v "$PWD":/src emscripten/emsdk:4.0.4 bash
+
+      - name: Build openFrameworks for the web
+        run: |
+          sed -i "s/PLATFORM_OPTIMIZATION_CFLAGS_DEBUG = .*/PLATFORM_OPTIMIZATION_CFLAGS_DEBUG = -g0/" of/libs/openFrameworksCompiled/project/emscripten/config.emscripten.default.mk
+          docker exec -w /src/of/libs/openFrameworksCompiled/project emscripten emmake make -j4 Release
+
+      - name: Set up the sketch project
+        run: |
+          mkdir -p of/apps/myApps/sketch/bin/data
+          cp -r sketch/src of/apps/myApps/sketch/
+          if [ -d sketch/bin/data ]; then cp -r sketch/bin/data/. of/apps/myApps/sketch/bin/data/; fi
+          # the web packager fails on an empty data folder, so always keep one small file in it
+          echo "web build" > of/apps/myApps/sketch/bin/data/web.txt
+          # the prebuilt web libraries expect reallocarray, which this emscripten version leaves out
+          cat > of/apps/myApps/sketch/src/web_compat.c <<'EOF'
+          #include <stdlib.h>
+          #include <stdint.h>
+          #include <errno.h>
+          void *reallocarray(void *ptr, size_t nmemb, size_t size) {
+            if (size != 0 && nmemb > SIZE_MAX / size) { errno = ENOMEM; return NULL; }
+            return realloc(ptr, nmemb * size);
+          }
+          EOF
+          cp of/scripts/templates/emscripten/Makefile of/apps/myApps/sketch/
+          cp of/scripts/templates/emscripten/config.make of/apps/myApps/sketch/
+          ls -la of/apps/myApps/sketch/src
+
+      - name: Build the sketch for the web
+        run: |
+          docker exec -w /src/of/apps/myApps/sketch emscripten emmake make -j4 Release
+          sudo chown -R "$(id -u):$(id -g)" of/apps/myApps/sketch/bin
+
+      - name: Make the page work on GitHub Pages
+        run: |
+          # openFrameworks web builds use threads, which need extra server headers.
+          # GitHub Pages can't set them, so this small helper script adds them in the browser.
+          OUT=of/apps/myApps/sketch/bin/em/sketch
+          curl -fsSL -o "$OUT/coi-serviceworker.min.js" https://unpkg.com/coi-serviceworker@0.1.7/coi-serviceworker.min.js
+          sed -i 's#<head>#<head>\n    <script src="coi-serviceworker.min.js"></script>#' "$OUT/index.html"
+          grep -n "coi-serviceworker" "$OUT/index.html"
+          # The template's "Fullscreen" button only drops the fixed-size canvas onto a
+          # black screen. Force a fullscreen canvas to fill the viewport so it actually
+          # goes fullscreen (the !important rules beat emscripten's inline sizing).
+          sed -i 's|</head>|  <style>#canvas:fullscreen{position:fixed!important;top:0!important;left:0!important;width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important}</style>\n  </head>|' "$OUT/index.html"
+          grep -n "canvas:fullscreen" "$OUT/index.html"
+          ls -la "$OUT"
+
+      - name: Package the web page
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: of/apps/myApps/sketch/bin/em/sketch
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
