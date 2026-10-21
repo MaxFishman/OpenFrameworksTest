@@ -47,9 +47,14 @@
   .gh-btn{display:inline-flex;align-items:center;gap:10px}
   .gh-btn svg{width:20px;height:20px;fill:currentColor}
   label.field{display:block;font-size:13px;color:var(--muted);font-weight:600;margin:0 0 7px}
-  input[type=text]{width:100%;padding:12px 14px;border-radius:11px;background:var(--panel-2);
+  input[type=text],input[type=password]{width:100%;padding:12px 14px;border-radius:11px;background:var(--panel-2);
     border:1px solid var(--line);color:var(--ink);font:inherit}
-  input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  input[type=text]:focus,input[type=password]:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  .toksteps{margin:0;padding-left:20px;color:var(--muted);font-size:14px}
+  .toksteps li{margin:6px 0}
+  .toksteps a{color:var(--accent);font-weight:600;text-decoration:none}
+  .toksteps a:hover{text-decoration:underline}
+  #tokenErr:not(:empty){color:#ff8098}
   .hint{font-size:12.5px;color:var(--faint);margin:7px 0 0}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   .drop{border:1.5px dashed var(--line);border-radius:12px;padding:22px;text-align:center;
@@ -102,24 +107,24 @@
       no compilers, no command line.</p>
   </header>
 
-  <!-- shown if the app hasn't been configured with an OAuth client id / proxy yet -->
-  <div id="setupNotice" class="card hidden">
-    <div class="notice">
-      <strong>Not configured yet.</strong> The teacher needs to set <code>CLIENT_ID</code> and
-      <code>PROXY_URL</code> in <code>web/uploader/index.html</code>. See <code>SETUP.md</code>.
-    </div>
-  </div>
-
-  <!-- STEP 1: sign in -->
+  <!-- STEP 1: connect with a token -->
   <section id="stepAuth" class="card hidden">
     <div class="step-head"><span class="step-no">1</span> Connect GitHub</div>
-    <p class="step-sub">We'll ask GitHub for permission to create one public repository for you.
-      Your sketch is yours — you can delete it anytime.</p>
+    <p class="step-sub">Create a quick access token so the app can make one repository for you.
+      It's kept only in this browser tab, and you can delete it on GitHub anytime.</p>
     <div style="margin-left:36px">
-      <button class="btn-primary gh-btn" id="signIn">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-        Sign in with GitHub
-      </button>
+      <ol class="toksteps">
+        <li>Open the <a id="tokenLink" href="#" target="_blank" rel="noopener">pre-filled token page&#8599;</a>
+          — the needed permissions (<span class="mono">public_repo</span>, <span class="mono">workflow</span>) are already ticked.</li>
+        <li>Pick an expiration, scroll down, and click <b>Generate token</b>.</li>
+        <li>Copy it and paste it here:</li>
+      </ol>
+      <div class="row" style="margin-top:12px">
+        <input type="password" id="tokenInput" placeholder="ghp_… or github_pat_…"
+          autocomplete="off" spellcheck="false" style="flex:1;min-width:0">
+        <button class="btn-primary" id="tokenGo">Connect</button>
+      </div>
+      <p class="hint" id="tokenErr"></p>
     </div>
   </section>
 
@@ -184,50 +189,38 @@
 </div>
 
 <script>
-/* ========================================================================
-   CONFIG — the teacher fills these in (see SETUP.md). CLIENT_ID is public.
-   ======================================================================== */
-const CONFIG = {
-  CLIENT_ID: "PASTE_OAUTH_CLIENT_ID",
-  PROXY_URL: "PASTE_WORKER_URL",          // e.g. https://of-oauth.<name>.workers.dev
-  SCOPES: "public_repo workflow",
-};
+/* No server, no setup: students paste a GitHub token that stays in this tab. */
+const TOKEN_SCOPES = "public_repo,workflow";
+const TOKEN_URL = "https://github.com/settings/tokens/new?description=openFrameworks+Uploader&scopes=" + TOKEN_SCOPES;
 
 const GH = "https://api.github.com";
 const $ = s => document.querySelector(s);
 const show = (el, on=true) => $(el).classList.toggle("hidden", !on);
-const configured = () => !CONFIG.CLIENT_ID.startsWith("PASTE") && !CONFIG.PROXY_URL.startsWith("PASTE");
 
 let token = sessionStorage.getItem("gh_token") || null;
 let me = null;                 // {login, avatar_url}
 const files = [];              // {path, b64, kind}
 
-/* ---------- OAuth ---------- */
-function redirectUri(){ return location.origin + location.pathname; }
-function signIn(){
-  const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
-  sessionStorage.setItem("gh_state", state);
-  const u = new URL("https://github.com/login/oauth/authorize");
-  u.searchParams.set("client_id", CONFIG.CLIENT_ID);
-  u.searchParams.set("redirect_uri", redirectUri());
-  u.searchParams.set("scope", CONFIG.SCOPES);
-  u.searchParams.set("state", state);
-  location.href = u.toString();
-}
+/* ---------- token auth ---------- */
 function signOut(){ token=null; me=null; sessionStorage.removeItem("gh_token"); render(); }
 
-async function handleRedirect(){
-  const p = new URLSearchParams(location.search);
-  const code = p.get("code"), state = p.get("state");
-  if(!code) return;
-  history.replaceState({}, "", redirectUri());   // clean the URL
-  if(state !== sessionStorage.getItem("gh_state")){ alert("Sign-in check failed, please try again."); return; }
+async function connectToken(){
+  const val = $("#tokenInput").value.trim();
+  const err = $("#tokenErr");
+  if(!val){ err.textContent="Paste your token first."; return; }
+  $("#tokenGo").disabled = true; err.textContent = "Checking…";
+  const prev = token; token = val;
   try{
-    const r = await fetch(`${CONFIG.PROXY_URL}?code=${encodeURIComponent(code)}`);
-    const data = await r.json();
-    if(data.error || !data.access_token) throw new Error(data.error_description || data.error || "No token returned");
-    token = data.access_token; sessionStorage.setItem("gh_token", token);
-  }catch(e){ alert("Could not complete sign-in: " + e.message); }
+    me = await api("/user");                       // validates the token
+    sessionStorage.setItem("gh_token", token);
+    err.textContent = "";
+    $("#tokenInput").value = "";
+    render();
+  }catch(e){
+    token = prev; me = null;
+    err.textContent = e.status===401 ? "That token didn't work — check you copied all of it."
+                                     : ("Couldn't connect: " + (e.message||e));
+  }finally{ $("#tokenGo").disabled = false; }
 }
 
 /* ---------- GitHub API ---------- */
@@ -412,9 +405,12 @@ async function publish(){
     step.className="ok"; step.textContent=`Created ${owner}/${name}`;
 
     step = logLine("run","Turning on GitHub Pages…");
+    let pagesOk = true;
     try{ await api(`/repos/${owner}/${name}/pages`, { method:"POST", body: JSON.stringify({ build_type:"workflow" }) }); }
-    catch(e){ if(e.status!==409 && e.status!==422) throw e; } // 409/422 = already enabled / not ready yet
-    step.className="ok"; step.textContent="GitHub Pages enabled";
+    catch(e){ if(e.status===409) { /* already enabled */ } else { pagesOk = false; } }
+    step.className = pagesOk ? "ok" : "run";
+    step.textContent = pagesOk ? "GitHub Pages enabled"
+      : "Couldn't auto-enable Pages — one quick manual step at the end";
 
     step = logLine("run","Adding your files…");
     // base tree from the auto_init commit
@@ -449,6 +445,9 @@ async function publish(){
     const actionsUrl=`${repoUrl}/actions`;
     const liveUrl=`https://${owner}.github.io/${name}/`;
     $("#links").innerHTML =
+      (pagesOk ? "" :
+        link("Finish setup: turn on Pages", `${repoUrl}/settings/pages`, `${repoUrl}/settings/pages`,
+             "Set Source to “GitHub Actions”, then re-run the build on the Actions tab.")) +
       link("Watch the build", actionsUrl, actionsUrl, "When it's green, your site is live.") +
       link("Your live sketch", liveUrl, liveUrl, "Ready in a few minutes (refresh if blank).") +
       link("Your repository", repoUrl, repoUrl, "");
@@ -460,7 +459,7 @@ async function publish(){
     let msg = e.message || String(e);
     if(e.status===422 && /name already exists/i.test(e.data?.errors?.[0]?.message||msg))
       msg = "You already have a repository with that name — pick another name.";
-    if(/workflow/i.test(msg) && e.status) msg = "GitHub blocked the workflow file. The sign-in needs the 'workflow' permission — sign out and in again.";
+    if(/workflow/i.test(msg) && e.status) msg = "GitHub blocked the workflow file. Your token needs the 'workflow' scope — make a new token with it ticked.";
     logLine("err","✗ "+msg);
     const retry=document.createElement("button"); retry.className="btn-ghost"; retry.textContent="Back";
     retry.onclick=()=>{ show("#stepWork",false); show("#stepForm",true); };
@@ -475,7 +474,6 @@ function link(lbl, href, url, sub){
 
 /* ---------- render ---------- */
 async function render(){
-  if(!configured()){ show("#setupNotice", true); return; }
   if(token && !me){ try{ me = await api("/user"); } catch{ token=null; sessionStorage.removeItem("gh_token"); } }
   if(token && me){
     show("#stepAuth",false); show("#stepForm",true); show("#stepWork",false);
@@ -483,6 +481,7 @@ async function render(){
     updateUrlPreview();
   }else{
     show("#stepAuth",true); show("#stepForm",false); show("#stepWork",false);
+    $("#tokenLink").href = TOKEN_URL;
   }
 }
 function updateUrlPreview(){
@@ -499,7 +498,6 @@ function wireZone(sel, forceKind, pickSel){
   zone.addEventListener("drop",e=>{ e.preventDefault(); if(e.dataTransfer) collectFromDrop(e.dataTransfer, forceKind); });
 }
 window.addEventListener("DOMContentLoaded", async ()=>{
-  $("#signIn").onclick=signIn;
   $("#signOut").onclick=signOut;
   $("#publish").onclick=publish;
   $("#repoName").addEventListener("input", updateUrlPreview);
@@ -510,7 +508,8 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   $("#pickSrc").onchange    =e=>{ addFileList(e.target.files, null);   e.target.value=""; };
   $("#pickFolder").onchange =e=>{ addFileList(e.target.files, null);   e.target.value=""; };
   $("#pickData").onchange   =e=>{ addFileList(e.target.files, "data"); e.target.value=""; };
-  await handleRedirect();
+  $("#tokenGo").onclick=connectToken;
+  $("#tokenInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); connectToken(); } });
   await render();
 });
 </script>
