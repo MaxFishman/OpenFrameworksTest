@@ -1,34 +1,44 @@
-# openFrameworks → Web (WebAssembly) on GitHub Pages
+<div align="center">
 
-You write normal openFrameworks C++. You push to GitHub. A few minutes later your
-sketch is running in the browser at a public URL. No local toolchain, no manual build.
+# openFrameworks&nbsp;→&nbsp;Web
 
-**Live demo:** https://maxfishman.github.io/OpenFrameworksTest/
-**One-click uploader:** https://maxfishman.github.io/OpenFrameworksTest/uploader/
+### Write C++. Push to GitHub. Watch it run in a browser — at a public URL, with no local toolchain.
 
-> New here? The fastest route is the [**web uploader**](#publish-in-one-click-the-web-uploader):
-> drop in your `src/`, and it creates the repo, adds the workflow, and turns on Pages
-> for you — no template, no command line.
+<br/>
+
+![openFrameworks 0.12.1](https://img.shields.io/badge/openFrameworks-0.12.1-ff5c8a?style=for-the-badge&labelColor=0b0e14)
+![Emscripten emsdk 4.0.4](https://img.shields.io/badge/Emscripten-emsdk%204.0.4-7aa2f7?style=for-the-badge&labelColor=0b0e14)
+![WebAssembly](https://img.shields.io/badge/WebAssembly-.wasm-9ece6a?style=for-the-badge&labelColor=0b0e14)
+![PWA offline](https://img.shields.io/badge/PWA-installable%20%C2%B7%20offline-ff9e64?style=for-the-badge&labelColor=0b0e14)
+
+**[▶ Live demo](https://maxfishman.github.io/OpenFrameworksTest/)** · **[⚡ One-click uploader](https://maxfishman.github.io/OpenFrameworksTest/uploader/)**
+
+</div>
+
+> [!TIP]
+> **New here?** The fastest route is the [**web uploader**](#-publish-in-one-click-the-web-uploader):
+> drop in your `src/`, and it creates the repo, adds the workflow, and turns on Pages for you —
+> no template, no command line.
 
 ---
 
 ## Table of contents
 
-1. [How it works (the big picture)](#how-it-works-the-big-picture)
-2. [Publish in one click (the web uploader)](#publish-in-one-click-the-web-uploader)
-3. [What's in this repo](#whats-in-this-repo)
-4. [Quick start: convert your own project](#quick-start-convert-your-own-project)
-5. [Enabling GitHub Pages (one-time)](#enabling-github-pages-one-time)
-6. [Controls in the demo](#controls-in-the-demo)
-7. [Writing code that works on the web](#writing-code-that-works-on-the-web)
-8. [What the workflow does, step by step](#what-the-workflow-does-step-by-step)
-9. [Troubleshooting](#troubleshooting)
-10. [Advanced: addons, pinning versions, caching](#advanced-addons-pinning-versions-caching)
-11. [FAQ](#faq)
+1. [How it works (the big picture)](#-how-it-works-the-big-picture)
+2. [Publish in one click (the web uploader)](#-publish-in-one-click-the-web-uploader)
+3. [What's in this repo](#-whats-in-this-repo)
+4. [Quick start: convert your own project](#-quick-start-convert-your-own-project)
+5. [Enabling GitHub Pages (one-time)](#-enabling-github-pages-one-time)
+6. [Controls in the demo](#-controls-in-the-demo)
+7. [Writing code that works on the web](#-writing-code-that-works-on-the-web)
+8. [What the workflow does, step by step](#-what-the-workflow-does-step-by-step)
+9. [Troubleshooting](#-troubleshooting)
+10. [Advanced: addons, pinning versions, caching](#-advanced-addons-pinning-versions-caching)
+11. [FAQ](#-faq)
 
 ---
 
-## How it works (the big picture)
+## 🧭 How it works (the big picture)
 
 Normally, building an openFrameworks app for the web means installing Emscripten,
 downloading openFrameworks, compiling the whole framework, and then compiling your
@@ -37,21 +47,26 @@ sketch — all on your own machine. That's a lot of setup.
 Instead, this repo hands all of that to a **GitHub Actions workflow** — a script that
 GitHub runs for you on its own servers:
 
-```
-you push C++ to GitHub
-        │
-        ▼
-GitHub Actions runs .github/workflows/web.yml
-        │
-        ├─ downloads openFrameworks 0.12.1
-        ├─ starts the Emscripten compiler (in Docker)
-        ├─ compiles openFrameworks for the web
-        ├─ drops YOUR src/ into an openFrameworks project
-        ├─ compiles your sketch → WebAssembly (.wasm) + JavaScript + HTML
-        └─ publishes the result to GitHub Pages
-        │
-        ▼
-your sketch is live at https://<you>.github.io/<repo>/
+```mermaid
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'ui-monospace, SFMono-Regular, Menlo, monospace','primaryColor':'#11151e','primaryTextColor':'#d8e0ee','primaryBorderColor':'#2e3749','lineColor':'#7aa2f7','secondaryColor':'#161b26','tertiaryColor':'#0e121b','clusterBkg':'#0e121b','clusterBorder':'#232a37','mainBkg':'#11151e'}}}%%
+flowchart TD
+  A["💻 You write openFrameworks C++<br/>and push to <b>main</b>"]:::you
+  subgraph GA["⚙️  GitHub Actions · .github/workflows/web.yml"]
+    direction TB
+    C["⬇️ Download openFrameworks 0.12.1"]:::step
+    D["🐳 Start the Emscripten compiler (Docker)"]:::step
+    E["🏗️ Compile openFrameworks for the web"]:::step
+    F["📂 Drop <b>your</b> src/ into an oF project"]:::step
+    G["🧩 Compile your sketch →<br/>WebAssembly (.wasm) + JavaScript + HTML"]:::step
+    H["🚀 Publish the result to GitHub Pages"]:::step
+    C --> D --> E --> F --> G --> H
+  end
+  A --> C
+  H --> I["🌐 Your sketch is live at<br/>https://&lt;you&gt;.github.io/&lt;repo&gt;/"]:::live
+
+  classDef you fill:#1b0a11,stroke:#ff5c8a,stroke-width:1.5px,color:#ffd9e4;
+  classDef live fill:#13210f,stroke:#9ece6a,stroke-width:1.5px,color:#dcf0c8;
+  classDef step fill:#11151e,stroke:#2e3749,color:#d8e0ee;
 ```
 
 The only files **you** maintain are your source code in `src/` (and optional assets in
@@ -59,32 +74,35 @@ The only files **you** maintain are your source code in `src/` (and optional ass
 
 ---
 
-## Publish in one click (the web uploader)
+## ⚡ Publish in one click (the web uploader)
 
 Setting up the template by hand is fine, but there's an even shorter path: the
 **web uploader**, a small browser app that does the GitHub wiring for you.
 
-**Open it:** https://maxfishman.github.io/OpenFrameworksTest/uploader/
+**Open it → https://maxfishman.github.io/OpenFrameworksTest/uploader/**
 
-```
-open the uploader → paste a GitHub token → drop in your src/ → “Create my project”
-        │
-        ▼
-the uploader (running in YOUR browser) talks straight to GitHub and:
-        │
-        ├─ creates a brand-new repository on your account
-        ├─ commits your src/ (and bin/data/) into it
-        ├─ adds the current .github/workflows/web.yml for you
-        └─ turns on GitHub Pages (Source = GitHub Actions)
-        │
-        ▼
-GitHub Actions builds it (the exact same flow as the diagram above)
-        │
-        ▼
-your sketch is live at https://<you>.github.io/<repo>/
-```
+```mermaid
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'ui-monospace, SFMono-Regular, Menlo, monospace','primaryColor':'#11151e','primaryTextColor':'#d8e0ee','primaryBorderColor':'#2e3749','lineColor':'#7aa2f7','secondaryColor':'#161b26','tertiaryColor':'#0e121b','clusterBkg':'#0e121b','clusterBorder':'#232a37','mainBkg':'#11151e'}}}%%
+flowchart TD
+  U1["🔑 Paste a GitHub token"]:::you
+  U2["📁 Drop in your src/<br/>(a folder, a .zip, or loose files)"]:::you
+  U3["▶️ Click “Create my project”"]:::you
+  subgraph BR["🖥️  The uploader — runs entirely in YOUR browser"]
+    direction TB
+    B1["① Create a brand-new repository"]:::step
+    B2["② Commit src/ (and bin/data/)"]:::step
+    B3["③ Add the current web.yml workflow"]:::step
+    B4["④ Turn on GitHub Pages"]:::step
+    B1 --> B2 --> B3 --> B4
+  end
+  U1 --> U2 --> U3 --> B1
+  B4 --> GA["⚙️ GitHub Actions builds it<br/>(the same flow as above)"]:::step
+  GA --> LIVE["🌐 Your sketch is live"]:::live
 
-Notes:
+  classDef you fill:#1b0a11,stroke:#ff5c8a,stroke-width:1.5px,color:#ffd9e4;
+  classDef live fill:#13210f,stroke:#9ece6a,stroke-width:1.5px,color:#dcf0c8;
+  classDef step fill:#11151e,stroke:#2e3749,color:#d8e0ee;
+```
 
 - **No server, no setup.** The uploader is a static page. The GitHub token you paste
   stays only in your browser tab and is sent directly to GitHub — never to us.
@@ -99,41 +117,58 @@ See [`web/uploader/`](web/uploader/) for the source, and the
 
 ---
 
-## What's in this repo
+## 📁 What's in this repo
 
 ```
 .
 ├── .github/
 │   └── workflows/
-│       └── web.yml        ← the build-and-deploy workflow (the important part)
+│       └── web.yml            ← the build-and-deploy workflow (the important part)
 ├── src/
-│   ├── main.cpp           ← creates the window and starts the app
-│   ├── ofApp.h / ofApp.cpp← your sketch (setup / draw / input)
-│   └── mover.hpp / mover.cpp ← a helper class used by the demo
-├── web/                   ← extras layered onto the published page (not part of the sketch)
-│   ├── sw.js              ← combined COOP/COEP + offline service worker for the demo
-│   ├── icons/             ← PWA / favicon icons
-│   └── uploader/          ← the one-click publish app (index.html, privacy, terms)
-└── README.md              ← you are here
+│   ├── main.cpp               ← creates the window and starts the app
+│   ├── ofApp.h / ofApp.cpp    ← your sketch (setup / draw / input)
+│   └── mover.hpp / mover.cpp  ← a helper class used by the demo
+├── web/                       ← extras layered onto the published page (not the sketch)
+│   ├── sw.js                  ← combined COOP/COEP + offline service worker (demo)
+│   ├── icons/                 ← PWA / favicon icons
+│   └── uploader/              ← the one-click publish app (index, privacy, terms)
+└── README.md                  ← you are here
 ```
 
-The `src/` folder is the only part you’d normally edit. There is **no** `bin/`, no
+The `src/` folder is the only part you'd normally edit. There is **no** `bin/`, no
 openFrameworks copy, and no Makefile in the repo — the workflow adds those during the
 build so you never commit them. The `web/` folder is optional chrome the workflow copies
-onto the deployed site; your own sketch doesn’t need it.
+onto the deployed site; your own sketch doesn't need it.
 
 ---
 
-## Quick start: convert your own project
+## 🚀 Quick start: convert your own project
 
 There are a few easy ways to get your sketch building on the web.
+
+```mermaid
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'ui-monospace, SFMono-Regular, Menlo, monospace','primaryColor':'#11151e','primaryTextColor':'#d8e0ee','primaryBorderColor':'#2e3749','lineColor':'#7aa2f7','mainBkg':'#11151e'}}}%%
+flowchart LR
+  START(["Have an oF sketch"]):::you
+  START --> A["🅰️ Web uploader<br/><i>easiest · no setup</i>"]:::live
+  START --> B["🅱️ Use this template<br/><i>a clean starter repo</i>"]:::step
+  START --> C["🅲 Add web.yml<br/><i>to an existing repo</i>"]:::step
+  A --> PAGES["Enable GitHub Pages (once)"]:::step
+  B --> PAGES
+  C --> PAGES
+  PAGES --> DONE(["🌐 Live site"]):::live
+
+  classDef you fill:#1b0a11,stroke:#ff5c8a,stroke-width:1.5px,color:#ffd9e4;
+  classDef live fill:#13210f,stroke:#9ece6a,stroke-width:1.5px,color:#dcf0c8;
+  classDef step fill:#11151e,stroke:#2e3749,color:#d8e0ee;
+```
 
 ### Option A — Use the web uploader (easiest, no setup)
 
 Open the [**web uploader**](https://maxfishman.github.io/OpenFrameworksTest/uploader/),
 paste a GitHub token, drop in your `src/` (a folder, a `.zip`, or loose files), and
 click **Create my project**. It makes the repo, adds the workflow, and turns on Pages
-for you. See [Publish in one click](#publish-in-one-click-the-web-uploader) above.
+for you. See [Publish in one click](#-publish-in-one-click-the-web-uploader) above.
 
 ### Option B — Use this repo as a template
 
@@ -144,7 +179,7 @@ for you. See [Publish in one click](#publish-in-one-click-the-web-uploader) abov
 3. If your sketch loads images, fonts, sounds, etc., put them in `bin/data/`
    (create the folder if it doesn't exist).
 4. Commit and push to the `main` branch.
-5. Do the [one-time Pages setup](#enabling-github-pages-one-time).
+5. Do the [one-time Pages setup](#-enabling-github-pages-one-time).
 6. Wait for the build (watch the **Actions** tab). When it's green, open your site.
 
 ### Option C — Add the workflow to an existing repo
@@ -153,15 +188,16 @@ for you. See [Publish in one click](#publish-in-one-click-the-web-uploader) abov
    path** in your repo.
 2. Make sure your C++ lives in a top-level `src/` folder and assets (if any) in
    `bin/data/`.
-3. Commit, push to `main`, then do the [Pages setup](#enabling-github-pages-one-time).
+3. Commit, push to `main`, then do the [Pages setup](#-enabling-github-pages-one-time).
 
-> **Important:** your project must follow the standard openFrameworks layout —
-> `src/` for code, `bin/data/` for assets. The workflow looks for exactly those
-> folders. Don't commit your own `bin/`, `obj/`, Makefiles, or an openFrameworks copy.
+> [!IMPORTANT]
+> Your project must follow the standard openFrameworks layout — `src/` for code,
+> `bin/data/` for assets. The workflow looks for exactly those folders. Don't commit your
+> own `bin/`, `obj/`, Makefiles, or an openFrameworks copy.
 
 ---
 
-## Enabling GitHub Pages (one-time)
+## 🔧 Enabling GitHub Pages (one-time)
 
 The workflow builds your page on every push, but GitHub won't _publish_ it until you
 turn Pages on and point it at GitHub Actions. Do this once per repo:
@@ -176,12 +212,13 @@ Your site will be at:
 https://<your-github-username>.github.io/<your-repo-name>/
 ```
 
+> [!NOTE]
 > The **first** time you visit, the page may reload itself once. That's normal — see
-> [“Why does the page reload once?”](#faq).
+> [“Why does the page reload once?”](#-faq).
 
 ---
 
-## Controls in the demo
+## 🎮 Controls in the demo
 
 | Key / action            | What it does                                  |
 | ----------------------- | --------------------------------------------- |
@@ -195,14 +232,14 @@ See `ofApp::toggleFullscreen()` in `src/ofApp.cpp` for how the `f` key does it.
 
 ---
 
-## Writing code that works on the web
+## 🧠 Writing code that works on the web
 
 Most openFrameworks code “just works,” but the web is not a desktop. Keep these in
 mind:
 
 - **Target openFrameworks 0.12.1.** That's the version the workflow downloads. Code
   that relies on newer or older APIs may not compile. (You can change the version —
-  see [Advanced](#advanced-addons-pinning-versions-caching).)
+  see [Advanced](#-advanced-addons-pinning-versions-caching).)
 - **Window setup.** `src/main.cpp` uses `ofGLWindowSettings` and starts in
   `OF_WINDOW` mode. That's correct for the web. Desktop-only window features
   (multi-monitor, native fullscreen at launch) don't translate directly.
@@ -218,7 +255,7 @@ mind:
 
 ---
 
-## What the workflow does, step by step
+## 📜 What the workflow does, step by step
 
 This is `.github/workflows/web.yml` in plain English. You don't need to understand
 every line to use it, but it helps when debugging.
@@ -251,7 +288,7 @@ The final page lives (inside the build) at
 
 ---
 
-## Troubleshooting
+## 🩺 Troubleshooting
 
 Open the **Actions** tab, click the failing run, and read the logs — the error is
 almost always in the **“Build the sketch for the web”** step.
@@ -263,14 +300,14 @@ almost always in the **“Build the sketch for the web”** step.
 | **Page is blank / stuck on “Downloading…”**        | Open the browser's **developer console** (F12) for the real error. Often a missing asset path or a crash in `setup()`.                   |
 | **Assets (images/fonts/sounds) don't load**        | They must be in `bin/data/` and loaded with relative paths. Confirm the file is committed and the name/case matches exactly.             |
 | **Fullscreen does nothing**                        | It must be triggered by a key/click (try `f` or the button), not called automatically. If you customized this, see `toggleFullscreen()`. |
-| **Deploy step fails**                              | GitHub Pages isn't enabled, or isn't set to “GitHub Actions.” Do the [one-time setup](#enabling-github-pages-one-time).                  |
+| **Deploy step fails**                              | GitHub Pages isn't enabled, or isn't set to “GitHub Actions.” Do the [one-time setup](#-enabling-github-pages-one-time).                  |
 | **Page reloads itself once on first visit**        | Expected — `coi-serviceworker` installs, then reloads so the threading headers apply.                                                    |
 | **Addons don't work**                              | The workflow doesn't copy `addons.make` by default. See Advanced.                                                                        |
 | **Build takes ~10–15 minutes**                     | Normal — it compiles all of openFrameworks from scratch each run. See caching in Advanced.                                               |
 
 ---
 
-## Advanced: addons, pinning versions, caching
+## 🧰 Advanced: addons, pinning versions, caching
 
 You only need this section if you're pushing past the basics.
 
@@ -310,46 +347,69 @@ comfortable with the basics.
 
 ---
 
-## FAQ
+## ❓ FAQ
 
-**Do I need to install anything on my computer?**
+<details>
+<summary><b>Do I need to install anything on my computer?</b></summary>
+
 No. You can edit files directly on GitHub if you want. For comfortable local
 development, install openFrameworks 0.12.1 and use your normal IDE — but the _web_
 build only ever happens on GitHub's servers.
+</details>
 
-**Can I test locally before pushing?**
+<details>
+<summary><b>Can I test locally before pushing?</b></summary>
+
 You can run your sketch as a normal desktop openFrameworks app locally. The web build
 is produced by the workflow; there's no separate local web step in this setup.
+</details>
 
-**Why does the page reload once?**
+<details>
+<summary><b>Why does the page reload once?</b></summary>
+
 openFrameworks web builds use threads, which the browser only allows with special
 security headers. GitHub Pages can't send them, so a tiny helper
 (`coi-serviceworker`) installs itself and reloads the page so the headers take effect.
 It only happens on the first load.
+</details>
 
-**Is my sketch public?**
+<details>
+<summary><b>Is my sketch public?</b></summary>
+
 If your repo is public and Pages is on, anyone with the URL can view it. For a private
 repo, GitHub Pages deployment requires a paid GitHub plan.
+</details>
 
-**Is the uploader's GitHub token safe to paste?**
+<details>
+<summary><b>Is the uploader's GitHub token safe to paste?</b></summary>
+
 The token lives only in that browser tab (`sessionStorage`) and is sent straight to
 GitHub's API — it never reaches any server of ours. Give it a short expiration and the
 minimum scopes (`public_repo`, `workflow`, which the uploader pre-ticks), and you can
 revoke it anytime at **GitHub → Settings → Developer settings → Tokens**. See the
 uploader's [Privacy Policy](web/uploader/privacy.html).
+</details>
 
-**Where do I change the window size?**
+<details>
+<summary><b>Where do I change the window size?</b></summary>
+
 In `src/main.cpp`: `settings.setSize(1024, 768);`. On the web the canvas is then
 scaled to fit the page / fullscreen.
+</details>
 
-**How long until my changes are live?**
+<details>
+<summary><b>How long until my changes are live?</b></summary>
+
 A full build is roughly 10–15 minutes, plus a short propagation delay after deploy.
 Watch the **Actions** tab for progress.
+</details>
 
 ---
 
-Happy sketching — push some C++ and watch it run in a browser. 🎨
+<div align="center">
 
----
+**Happy sketching — push some C++ and watch it run in a browser.** 🎨
 
-Built by **Max Fishman** + **Luisa Pinzon** (Executive Directors — Digital Arts).
+<sub>Built by <b>Max Fishman</b> + <b>Luisa Pinzon</b> · Executive Directors — Digital Arts</sub>
+
+</div>
