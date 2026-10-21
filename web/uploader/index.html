@@ -8,10 +8,19 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <meta name="theme-color" content="#0b0e14">
+<meta name="description" content="Publish your openFrameworks sketch to the web in one click — it builds to WebAssembly and goes live on GitHub Pages.">
+<!-- social preview -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Publish your openFrameworks sketch">
+<meta property="og:description" content="Drop in your source — it compiles to WebAssembly and publishes at a public link. No compilers, no command line.">
+<meta property="og:image" content="https://maxfishman.github.io/OpenFrameworksTest/og/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
 <script src="sw.js"></script>
 <!-- Generated at build time: window.__WEB_YML_B64__ = the current web.yml, so student
      repos always get the up-to-date workflow. Loaded defensively (may be absent in dev). -->
 <script src="workflow.js"></script>
+<!-- tiny offline-safe QR generator (MIT, Kazuhiko Arase) for the share card -->
+<script src="qrcode.js"></script>
 <style>
   /* ===========================================================
      "Night sketch" — an editor/IDE theme for a creative-coding tool.
@@ -203,6 +212,22 @@
   .links a:hover{border-color:var(--fn);transform:translateX(2px)}
   .links .lbl{font-weight:700}
   .links .url{margin-left:auto;color:var(--faint);font-size:12px}
+
+  /* share card: copy link + QR for showing a sketch on a phone */
+  .share{margin-top:14px;border:1px solid var(--line);border-radius:11px;background:var(--panel-2);padding:14px}
+  .share .sh-head{font-size:12.5px;color:var(--cmt);margin:0 0 10px}
+  .share .sh-head .hash{color:var(--kw)}
+  .share .copyrow{display:flex;gap:8px;align-items:stretch}
+  .share .copyrow input{flex:1;min-width:0;font-family:var(--mono);font-size:12.5px;color:var(--str);
+    background:var(--bg-2);border:1px solid var(--line-2);border-radius:9px;padding:10px 12px}
+  .share .copyrow button{flex:none}
+  .share .copyrow button.copied{background:var(--str);color:#0c1708;border-color:transparent}
+  .share .sh-tools{display:flex;gap:10px;align-items:center;margin-top:10px}
+  .share .qrwrap{display:none;margin-top:12px;align-items:center;gap:14px}
+  .share .qrwrap.on{display:flex}
+  .share .qr{background:#fff;padding:10px;border-radius:10px;line-height:0;flex:none}
+  .share .qr svg{display:block;width:132px;height:132px}
+  .share .qrhint{font-size:12.5px;color:var(--muted);font-family:var(--sans);line-height:1.5}
   .muted{color:var(--muted)} .hidden{display:none}
 
   footer{margin-top:28px;color:var(--faint);font-size:12px;text-align:center;line-height:1.7}
@@ -337,12 +362,13 @@
         <div class="pane-title" id="workTitle">Building your project…</div>
         <div class="log" id="log"></div>
         <div class="buildstat hidden" id="buildStatus"></div>
+        <div class="share hidden" id="share"></div>
         <div class="links" id="links"></div>
         <div class="row" id="againRow" style="margin-top:18px"></div>
       </section>
 
       <footer>
-        <div>builds with openFrameworks 0.12.1 + Emscripten · <a href="../">see the demo sketch</a></div>
+        <div>builds with openFrameworks 0.12.1 + Emscripten · <a href="../">demo</a> · <a href="../gallery/">gallery</a> · <a href="../docs/">docs</a></div>
         <div class="credit" style="margin-top:12px">
           App built by <b>Max Fishman</b> + <b>Luisa Pinzon</b>
           <span class="role">Executive Directors — Digital Arts</span>
@@ -586,6 +612,7 @@ async function publish(){
   const name = sanitizeName($("#repoName").value);
   showPane("build");
   $("#log").innerHTML=""; $("#links").innerHTML=""; $("#againRow").innerHTML=""; $("#buildStatus").classList.add("hidden");
+  $("#share").classList.add("hidden"); $("#share").innerHTML="";
   $("#workTitle").textContent = `Building ${name}…`;
 
   const owner = me.login;
@@ -647,6 +674,8 @@ async function publish(){
       link("Watch the build", actionsUrl, actionsUrl, "When it's green, your site is live.") +
       link("Your live sketch", liveUrl, liveUrl, "Ready in a few minutes (refresh if blank).") +
       link("Your repository", repoUrl, repoUrl, "");
+    renderShare(liveUrl);
+
     const again=document.createElement("button"); again.className="btn-ghost"; again.textContent="Publish another sketch";
     again.onclick=()=>{ files.length=0; skipped.length=0; renderFiles(); showPane("name"); };
     $("#againRow").appendChild(again);
@@ -668,6 +697,52 @@ function link(lbl, href, url, sub){
   return `<a href="${href}" target="_blank" rel="noopener"><span class="lbl">${lbl}</span>`+
     (sub?`<span class="muted" style="font-size:12px;margin-left:10px">${sub}</span>`:"")+
     `<span class="url">${url.replace(/^https:\/\//,"")}</span></a>`;
+}
+
+// Success-screen share tools: copy the live link, and a QR to open it on a phone.
+function renderShare(liveUrl){
+  const box = $("#share");
+  box.classList.remove("hidden");
+  box.innerHTML =
+    `<p class="sh-head"><span class="hash">#</span> share your sketch</p>`+
+    `<div class="copyrow">`+
+      `<input id="shareUrl" type="text" readonly value="${liveUrl}">`+
+      `<button class="btn-primary" id="copyBtn">Copy link</button>`+
+    `</div>`+
+    `<div class="sh-tools">`+
+      `<button class="btn-ghost btn-sm" id="qrBtn">Show QR code</button>`+
+      `<span class="muted" style="font-size:12px">great for opening it on a phone</span>`+
+    `</div>`+
+    `<div class="qrwrap" id="qrWrap"><div class="qr" id="qrBox"></div>`+
+      `<span class="qrhint">Point a phone camera at the code to open<br>your live sketch.</span></div>`;
+
+  const input = $("#shareUrl"), copyBtn = $("#copyBtn");
+  copyBtn.onclick = async ()=>{
+    try{ await navigator.clipboard.writeText(liveUrl); }
+    catch{ input.select(); try{ document.execCommand("copy"); }catch(e){} }
+    copyBtn.textContent = "Copied ✓"; copyBtn.classList.add("copied");
+    setTimeout(()=>{ copyBtn.textContent = "Copy link"; copyBtn.classList.remove("copied"); }, 1800);
+  };
+
+  let built = false;
+  $("#qrBtn").onclick = ()=>{
+    const wrap = $("#qrWrap");
+    const on = wrap.classList.toggle("on");
+    $("#qrBtn").textContent = on ? "Hide QR code" : "Show QR code";
+    if(on && !built){
+      built = true;
+      try{
+        if(window.qrcode){
+          if(qrcode.stringToBytesFuncs && qrcode.stringToBytesFuncs["UTF-8"])
+            qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"];
+          const qr = qrcode(0, "M"); qr.addData(liveUrl); qr.make();
+          $("#qrBox").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2 });
+        } else {
+          $("#qrBox").outerHTML = `<span class="qrhint">QR unavailable offline.</span>`;
+        }
+      }catch(e){ $("#qrBox").innerHTML = ""; }
+    }
+  };
 }
 
 // Poll the Actions API so the student sees Building… → Live! without leaving the page.

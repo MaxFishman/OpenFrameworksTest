@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch gallery · openFrameworks on the web</title>
+<meta name="description" content="A gallery of openFrameworks sketches compiled to WebAssembly and published on the web.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNmZjNjNjQiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMCAyMC40KSBzY2FsZSgwLjQpIiBmaWxsPSIjZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik01OCAyOUM1OCAxMyA0NSAwIDI5IDAgMTMgMCAwIDEzIDAgMjkgMCA0NSAxMyA1OCAyOSA1OCA0NSA1OCA1OCA0NSA1OCAyOVoiLz48cmVjdCB4PSI1OSIgd2lkdGg9IjI1IiBoZWlnaHQ9IjU4Ii8+PHJlY3QgeD0iODUiIHk9IjI2IiB3aWR0aD0iMTUiIGhlaWdodD0iMTUiLz48cGF0aCBkPSJNODUgMCAxMTAgMCA4NSAyNSA4NSAwWiIvPjwvZz48L3N2Zz4K">
+<meta name="theme-color" content="#0b0e14">
+<!-- social preview -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="openFrameworks sketch gallery">
+<meta property="og:description" content="Creative-coding sketches compiled to WebAssembly and running in the browser.">
+<meta property="og:image" content="https://maxfishman.github.io/OpenFrameworksTest/og/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root{
+    --bg:#0b0e14; --bg-2:#0e121b; --panel:#11151e; --panel-2:#161b26; --panel-3:#1b2130;
+    --line:#232a37; --line-2:#2e3749;
+    --ink:#d8e0ee; --muted:#8a93a6; --faint:#515b6d;
+    --kw:#ff5c8a; --str:#9ece6a; --fn:#7aa2f7; --num:#ff9e64; --cmt:#5c6a7e;
+    --radius:12px; --maxw:1040px;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    font-family:var(--mono);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  html,body{margin:0;background:var(--bg);color:var(--ink);min-height:100%}
+  body{line-height:1.5;-webkit-font-smoothing:antialiased;font-size:15px;
+    background:
+      radial-gradient(1100px 600px at 88% -12%, rgba(255,92,138,.10), transparent 60%),
+      radial-gradient(900px 600px at 6% 112%, rgba(122,162,247,.08), transparent 58%),
+      var(--bg);
+    background-attachment:fixed;}
+  .scrollbar{position:fixed;top:0;left:0;right:0;height:2px;transform-origin:0 50%;transform:scaleX(0);
+    background:linear-gradient(90deg,var(--kw),var(--fn));z-index:50}
+  @supports (animation-timeline:scroll()){
+    .scrollbar{animation:sb-grow linear both;animation-timeline:scroll(root block)}
+    @keyframes sb-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:30px 20px 80px}
+
+  header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:8px 0 26px}
+  .eyebrow{font-size:12px;color:var(--cmt);margin:0 0 12px}
+  h1{font-size:clamp(26px,5vw,40px);line-height:1.08;margin:0;font-weight:700;letter-spacing:-.01em}
+  h1 .kw{color:var(--kw)}
+  .sub{color:var(--muted);font-size:14px;margin:8px 0 0;font-family:var(--sans);max-width:52ch;line-height:1.6}
+  .actions{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{font:inherit;font-weight:600;font-size:13.5px;border-radius:9px;cursor:pointer;text-decoration:none;
+    padding:10px 15px;border:1px solid var(--line-2);background:var(--panel-2);color:var(--ink);
+    display:inline-flex;align-items:center;gap:8px;transition:border-color .15s,transform .05s}
+  .btn:hover{border-color:var(--fn)} .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--kw);color:#1b0a11;border-color:transparent;
+    box-shadow:0 6px 20px -8px rgba(255,92,138,.7)}
+  .btn-primary:hover{background:#ff76a0;border-color:transparent}
+
+  .statusline{font-size:12.5px;color:var(--faint);margin:0 0 16px}
+  .statusline .k{color:var(--str)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+  .card{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--panel);overflow:hidden;transition:border-color .15s,transform .12s,box-shadow .15s}
+  .card:hover{border-color:var(--line-2);transform:translateY(-3px);
+    box-shadow:0 18px 50px -24px rgba(0,0,0,.85)}
+  .reveal{opacity:1;transform:none}
+  @supports (animation-timeline:view()){
+    .reveal{animation:reveal-up linear both;animation-timeline:view();animation-range:entry 0% entry 30%}
+    @keyframes reveal-up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  }
+  /* preview: a themed placeholder that loads the live sketch in an iframe on demand */
+  .thumb{position:relative;aspect-ratio:4/3;background:
+      radial-gradient(120% 120% at 20% 0%, rgba(255,92,138,.18), transparent 55%),
+      radial-gradient(120% 120% at 100% 100%, rgba(122,162,247,.16), transparent 55%),
+      var(--bg-2);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}
+  .thumb .mono-badge{font-size:13px;color:var(--faint);letter-spacing:.04em;
+    border:1px solid var(--line-2);border-radius:999px;padding:7px 14px;background:rgba(11,14,20,.5);
+    display:inline-flex;align-items:center;gap:8px}
+  .thumb .mono-badge .play{color:var(--kw)}
+  .thumb iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+  .thumb.loaded .mono-badge{display:none}
+  .card .body{padding:14px 15px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .card .title{font-weight:700;font-size:15px;color:var(--ink);letter-spacing:-.01em;
+    display:flex;align-items:center;gap:8px}
+  .card .by{font-size:12.5px;color:var(--muted)}
+  .card .by a{color:var(--fn);text-decoration:none} .card .by a:hover{text-decoration:underline}
+  .card .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+  .card .tag{font-size:10.5px;color:var(--num);border:1px solid rgba(255,158,100,.35);
+    border-radius:5px;padding:1px 7px}
+  .card .row{display:flex;gap:8px;margin-top:auto;padding-top:10px}
+  .card .row a{flex:1;text-align:center;font-size:12.5px;font-weight:600;text-decoration:none;
+    padding:8px 10px;border-radius:8px;border:1px solid var(--line-2);color:var(--ink);
+    transition:border-color .15s,background .15s}
+  .card .row a.live{color:var(--str);border-color:rgba(158,206,106,.4)}
+  .card .row a.live:hover{background:rgba(158,206,106,.1)}
+  .card .row a.src:hover{border-color:var(--fn);color:var(--fn)}
+
+  .empty{border:1px dashed var(--line-2);border-radius:var(--radius);padding:40px 24px;text-align:center;
+    color:var(--muted);font-family:var(--sans)}
+  .empty code{font-family:var(--mono);color:var(--num);background:var(--bg-2);padding:2px 7px;border-radius:5px}
+
+  footer{margin-top:40px;color:var(--faint);font-size:12px;text-align:center;line-height:1.7}
+  footer a{color:var(--fn);text-decoration:none} footer a:hover{text-decoration:underline}
+  footer .credit b{color:var(--muted)}
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+  }
+</style>
+</head>
+<body>
+<div class="scrollbar" aria-hidden="true"></div>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">// openframeworks → webassembly</p>
+      <h1>Sketch <span class="kw">gallery</span></h1>
+      <p class="sub">Creative-coding sketches compiled to WebAssembly, running right in the browser.
+        Tag a public repo <b style="color:var(--num)">of-web-sketch</b> and it shows up here automatically.</p>
+    </div>
+    <div class="actions">
+      <a class="btn btn-primary" href="../uploader/">⚡ Publish yours</a>
+      <a class="btn" href="../">▶ Demo</a>
+    </div>
+  </header>
+
+  <p class="statusline" id="status">Loading sketches…</p>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">
+    No sketches yet. Publish one with the <a href="../uploader/" style="color:var(--fn)">uploader</a>,
+    then add the topic <code>of-web-sketch</code> to your repo on GitHub — it'll appear here.
+  </div>
+
+  <footer>
+    <div><a href="../uploader/">Uploader</a> · <a href="../">Demo</a> · <a href="../uploader/privacy.html">Privacy</a> · <a href="../uploader/terms.html">Terms</a></div>
+    <div class="credit" style="margin-top:10px">Built by <b>Max Fishman</b> + <b>Luisa Pinzon</b> · Executive Directors — Digital Arts</div>
+  </footer>
+</div>
+
+<script>
+const GH_TOPIC = "of-web-sketch";
+const $ = s => document.querySelector(s);
+
+// Normalize a GitHub Pages live URL for deduping (lowercase, trailing slash).
+function liveKey(u){ try{ const x=new URL(u); return (x.host+x.pathname).toLowerCase().replace(/\/+$/,"/"); }catch{ return (u||"").toLowerCase(); } }
+
+// Derive the live GitHub Pages URL for a repo (owner/name) — best-effort, project pages.
+function pagesUrl(owner, name){ return `https://${owner.toLowerCase()}.github.io/${name}/`; }
+
+function el(tag, cls, html){ const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function card(s){
+  const c = el("div","card reveal");
+  const thumb = el("div","thumb");
+  thumb.innerHTML = `<span class="mono-badge"><span class="play">▶</span> run sketch</span>`;
+  thumb.title = "Click to run the live sketch here";
+  thumb.addEventListener("click", ()=>{
+    if(thumb.classList.contains("loaded")) return;
+    const f = el("iframe"); f.src = s.live; f.loading="lazy";
+    f.allow = "autoplay; fullscreen"; f.setAttribute("title", s.title||"sketch");
+    thumb.appendChild(f); thumb.classList.add("loaded");
+  });
+  const body = el("div","body");
+  const tags = (s.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join("");
+  body.innerHTML =
+    `<div class="title">${esc(s.title||"Untitled sketch")}</div>`+
+    `<div class="by">by <a href="${esc(s.authorUrl||('https://github.com/'+ (s.author||'')))}" target="_blank" rel="noopener">${esc(s.author||"someone")}</a></div>`+
+    (tags?`<div class="tags">${tags}</div>`:"")+
+    `<div class="row">`+
+      `<a class="live" href="${esc(s.live)}" target="_blank" rel="noopener">Open ↗</a>`+
+      (s.repo?`<a class="src" href="${esc(s.repo)}" target="_blank" rel="noopener">Source</a>`:"")+
+    `</div>`;
+  c.appendChild(thumb); c.appendChild(body);
+  return c;
+}
+
+async function loadCurated(){
+  try{ const r = await fetch("sketches.json", {cache:"no-cache"}); if(!r.ok) return [];
+    const j = await r.json(); return (j.sketches||[]).map(s=>({...s})); }
+  catch{ return []; }
+}
+
+// Public GitHub search by topic — unauthenticated (rate-limited but fine for a class page).
+async function loadFromTopic(){
+  try{
+    const r = await fetch(`https://api.github.com/search/repositories?q=topic:${GH_TOPIC}+fork:true&sort=updated&per_page=60`,
+      { headers:{ "Accept":"application/vnd.github+json" } });
+    if(!r.ok) return [];
+    const j = await r.json();
+    return (j.items||[]).filter(it=>it.has_pages).map(it=>({
+      title: it.name,
+      author: it.owner && it.owner.login,
+      authorUrl: it.owner && it.owner.html_url,
+      repo: it.html_url,
+      live: it.homepage && /github\.io/.test(it.homepage) ? it.homepage : pagesUrl(it.owner.login, it.name),
+      tags: (it.topics||[]).filter(t=>t!==GH_TOPIC).slice(0,3)
+    }));
+  }catch{ return []; }
+}
+
+function dedupe(list){
+  const seen = new Set(); const out = [];
+  for(const s of list){ if(!s || !s.live) continue; const k = liveKey(s.live);
+    if(seen.has(k)) continue; seen.add(k); out.push(s); }
+  return out;
+}
+
+(async function init(){
+  const [curated, topic] = await Promise.all([loadCurated(), loadFromTopic()]);
+  const sketches = dedupe([...curated, ...topic]);
+  const grid = $("#grid"), status = $("#status");
+  if(!sketches.length){ status.style.display="none"; $("#empty").style.display="block"; return; }
+  const src = topic.length ? `curated + <span class="k">${topic.length}</span> auto-discovered (topic: ${GH_TOPIC})` : "curated";
+  status.innerHTML = `${sketches.length} sketch${sketches.length>1?"es":""} · ${src}`;
+  const frag = document.createDocumentFragment();
+  for(const s of sketches) frag.appendChild(card(s));
+  grid.appendChild(frag);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docs · openFrameworks on the web</title>
+<meta name="description" content="How the openFrameworks → WebAssembly → GitHub Pages pipeline works, and how to publish your own sketch.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNmZjNjNjQiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMCAyMC40KSBzY2FsZSgwLjQpIiBmaWxsPSIjZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik01OCAyOUM1OCAxMyA0NSAwIDI5IDAgMTMgMCAwIDEzIDAgMjkgMCA0NSAxMyA1OCAyOSA1OCA0NSA1OCA1OCA0NSA1OCAyOVoiLz48cmVjdCB4PSI1OSIgd2lkdGg9IjI1IiBoZWlnaHQ9IjU4Ii8+PHJlY3QgeD0iODUiIHk9IjI2IiB3aWR0aD0iMTUiIGhlaWdodD0iMTUiLz48cGF0aCBkPSJNODUgMCAxMTAgMCA4NSAyNSA4NSAwWiIvPjwvZz48L3N2Zz4K">
+<meta name="theme-color" content="#0b0e14">
+<meta property="og:type" content="article">
+<meta property="og:title" content="openFrameworks on the web — Docs">
+<meta property="og:description" content="How the openFrameworks → WebAssembly → GitHub Pages pipeline works.">
+<meta property="og:image" content="https://maxfishman.github.io/OpenFrameworksTest/og/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root{
+    --bg:#0b0e14; --bg-2:#0e121b; --panel:#11151e; --panel-2:#161b26;
+    --line:#232a37; --line-2:#2e3749;
+    --ink:#d8e0ee; --muted:#8a93a6; --faint:#515b6d;
+    --kw:#ff5c8a; --str:#9ece6a; --fn:#7aa2f7; --num:#ff9e64; --cmt:#5c6a7e;
+    --radius:12px;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    font-family:var(--mono);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  html,body{margin:0;background:var(--bg);color:var(--ink);min-height:100%}
+  body{line-height:1.6;-webkit-font-smoothing:antialiased;font-size:15px;
+    background:
+      radial-gradient(1100px 600px at 92% -12%, rgba(255,92,138,.09), transparent 60%),
+      radial-gradient(900px 600px at 4% 112%, rgba(122,162,247,.07), transparent 58%),
+      var(--bg);
+    background-attachment:fixed;}
+  .scrollbar{position:fixed;top:0;left:0;right:0;height:2px;transform-origin:0 50%;transform:scaleX(0);
+    background:linear-gradient(90deg,var(--kw),var(--fn));z-index:60}
+  @supports (animation-timeline:scroll()){
+    .scrollbar{animation:sb-grow linear both;animation-timeline:scroll(root block)}
+    @keyframes sb-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  }
+
+  .shell{max-width:1060px;margin:0 auto;padding:24px 20px 80px}
+  .editor{border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    background:linear-gradient(180deg,var(--bg-2),var(--panel));
+    box-shadow:0 24px 70px -30px rgba(0,0,0,.8)}
+  .titlebar{display:flex;align-items:center;gap:12px;padding:11px 15px;background:var(--panel-2);border-bottom:1px solid var(--line)}
+  .dots{display:flex;gap:7px}.dots i{width:11px;height:11px;border-radius:50%;display:block;background:var(--line-2)}
+  .dots i:nth-child(1){background:#ff5f57}.dots i:nth-child(2){background:#febc2e}.dots i:nth-child(3){background:#28c840}
+  .tab{font-size:12.5px;color:var(--muted)}.tab .dot{color:var(--kw)}
+  .path{margin-left:auto;font-size:11.5px;color:var(--faint)}
+
+  .layout{display:grid;grid-template-columns:200px 1fr;gap:0}
+  nav.side{border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto}
+  nav.side .lbl{font-size:11px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px 8px}
+  nav.side a{display:block;color:var(--muted);text-decoration:none;font-size:13px;padding:6px 9px;border-radius:7px;
+    border-left:2px solid transparent;transition:color .15s,background .15s,border-color .15s}
+  nav.side a:hover{color:var(--ink);background:var(--panel-2)}
+  nav.side a.active{color:var(--ink);border-left-color:var(--kw);background:rgba(255,92,138,.08)}
+  nav.side .n{color:var(--faint);margin-right:7px}
+  main{padding:30px 30px 40px;min-width:0}
+  @media(max-width:760px){ .layout{grid-template-columns:1fr} nav.side{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px}
+    nav.side .lbl{display:none} nav.side a{border-left:0} main{padding:24px 18px} }
+
+  .hero .eyebrow{font-size:12px;color:var(--cmt);margin:0 0 12px}
+  h1{font-size:clamp(26px,4vw,38px);line-height:1.08;margin:0 0 10px;font-weight:700;letter-spacing:-.01em}
+  h1 .kw{color:var(--kw)}.h1 .str{color:var(--str)}
+  .lede{color:var(--muted);font-size:15px;font-family:var(--sans);max-width:60ch;margin:0 0 6px}
+  .quick{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 6px}
+  .quick a{font-weight:600;font-size:13.5px;text-decoration:none;padding:9px 14px;border-radius:9px;
+    border:1px solid var(--line-2);color:var(--ink);display:inline-flex;gap:7px;align-items:center;transition:border-color .15s}
+  .quick a:hover{border-color:var(--fn)}
+  .quick a.primary{background:var(--kw);color:#1b0a11;border-color:transparent}
+
+  section{scroll-margin-top:16px;padding:30px 0;border-top:1px solid var(--line)}
+  section:first-of-type{border-top:0}
+  h2{font-size:20px;font-weight:700;margin:0 0 14px;letter-spacing:-.01em}
+  h2 .hash{color:var(--kw);margin-right:8px}
+  h3{font-size:15px;font-weight:700;margin:22px 0 8px;color:var(--ink)}
+  p,li{color:var(--muted);font-family:var(--sans);font-size:14.5px}
+  a{color:var(--fn);text-decoration:none;font-weight:600}a:hover{text-decoration:underline}
+  ul,ol{padding-left:20px}li{margin:6px 0}
+  code{font-family:var(--mono);font-size:13px;color:var(--num);background:var(--bg-2);padding:1.5px 6px;border-radius:5px;border:1px solid var(--line)}
+  b{color:var(--ink)}
+
+  /* pipeline diagram in pure CSS (no deps) */
+  .pipe{display:flex;flex-direction:column;gap:0;margin:8px 0 4px}
+  .pipe .node{border:1px solid var(--line-2);border-radius:10px;padding:12px 15px;background:var(--panel);
+    font-size:13.5px;display:flex;align-items:center;gap:10px}
+  .pipe .node .i{flex:none}
+  .pipe .node.you{border-color:var(--kw);background:rgba(255,92,138,.08);color:#ffd9e4}
+  .pipe .node.live{border-color:rgba(158,206,106,.5);background:rgba(158,206,106,.08);color:#dcf0c8}
+  .pipe .arrow{align-self:center;color:var(--fn);font-size:16px;line-height:1;padding:5px 0}
+  .pipe .group{border:1px dashed var(--line-2);border-radius:12px;padding:10px;background:var(--bg-2)}
+  .pipe .group .glabel{font-size:11.5px;color:var(--cmt);margin:0 0 9px 2px}
+  .pipe .group .node{margin:7px 0}
+
+  pre{background:#070a0f;border:1px solid var(--line);border-radius:11px;padding:14px 16px;overflow:auto;margin:12px 0}
+  pre code{background:none;border:0;color:var(--ink);padding:0;font-size:12.5px;line-height:1.7}
+  .cmt{color:var(--cmt)}.tk{color:var(--kw)}.st{color:var(--str)}.nu{color:var(--num)}
+
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px;font-family:var(--sans)}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--faint);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  td{color:var(--muted)} td code{font-size:12px}
+
+  .callout{border:1px solid var(--line-2);border-left:3px solid var(--fn);border-radius:10px;background:var(--panel-2);
+    padding:13px 15px;margin:14px 0;font-family:var(--sans);font-size:14px;color:var(--muted)}
+  .callout.warn{border-left-color:var(--num)} .callout.good{border-left-color:var(--str)}
+  .callout b{color:var(--ink)}
+
+  details{border:1px solid var(--line);border-radius:10px;background:var(--panel);margin:9px 0;padding:0 15px}
+  summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--ink);font-size:14px;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";color:var(--kw)} details[open] summary::before{content:"▾ "}
+  details p{margin:0 0 12px}
+
+  footer{margin-top:30px;color:var(--faint);font-size:12px;text-align:center;line-height:1.7}
+  footer a{color:var(--fn)}
+  footer .credit b{color:var(--muted)}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important} }
+</style>
+</head>
+<body>
+<div class="scrollbar" aria-hidden="true"></div>
+<div class="shell">
+  <div class="editor">
+    <div class="titlebar">
+      <span class="dots"><i></i><i></i><i></i></span>
+      <span class="tab"><span class="dot">●</span> docs.md</span>
+      <span class="path">~/openframeworks → web</span>
+    </div>
+    <div class="layout">
+      <nav class="side" id="toc">
+        <p class="lbl">Contents</p>
+        <a href="#overview"><span class="n">01</span>Overview</a>
+        <a href="#how"><span class="n">02</span>How it works</a>
+        <a href="#uploader"><span class="n">03</span>One-click uploader</a>
+        <a href="#start"><span class="n">04</span>Quick start</a>
+        <a href="#pages"><span class="n">05</span>Enable Pages</a>
+        <a href="#webcode"><span class="n">06</span>Code for the web</a>
+        <a href="#workflow"><span class="n">07</span>The workflow</a>
+        <a href="#trouble"><span class="n">08</span>Troubleshooting</a>
+        <a href="#faq"><span class="n">09</span>FAQ</a>
+      </nav>
+      <main>
+        <div class="hero">
+          <p class="eyebrow">// openframeworks → webassembly → github pages</p>
+          <h1>Write C++. Push. It's <span class="kw">live</span> in a browser.</h1>
+          <p class="lede">No local toolchain, no manual build. A GitHub Actions workflow compiles your
+            openFrameworks sketch to WebAssembly and publishes it at a public URL.</p>
+          <div class="quick">
+            <a class="primary" href="../uploader/">⚡ Publish a sketch</a>
+            <a href="../gallery/">🖼️ Gallery</a>
+            <a href="../">▶ Live demo</a>
+            <a href="https://github.com/MaxFishman/OpenFrameworksTest" target="_blank" rel="noopener">★ Source</a>
+          </div>
+        </div>
+
+        <section id="overview">
+          <h2><span class="hash">#</span>Overview</h2>
+          <p>Building an openFrameworks app for the web normally means installing Emscripten, downloading
+            openFrameworks, compiling the whole framework, then compiling your sketch — all locally. This
+            project hands all of that to a <b>GitHub Actions workflow</b> that runs on GitHub's servers.</p>
+          <p>The only files you maintain are your source in <code>src/</code> (and optional assets in
+            <code>bin/data/</code>). The workflow supplies everything else — and <b>caches the compiled
+            framework</b>, so after the first run, builds drop from ~10–15 min to a couple of minutes.</p>
+        </section>
+
+        <section id="how">
+          <h2><span class="hash">#</span>How it works</h2>
+          <div class="pipe">
+            <div class="node you"><span class="i">💻</span> You write openFrameworks C++ and push to <b>main</b></div>
+            <div class="arrow">↓</div>
+            <div class="group">
+              <p class="glabel">⚙️ GitHub Actions · .github/workflows/web.yml</p>
+              <div class="node">⬇️ Download openFrameworks 0.12.1</div>
+              <div class="node">🐳 Start the Emscripten compiler (Docker)</div>
+              <div class="node">🏗️ Build openFrameworks for the web <span style="color:var(--str)">· cached</span></div>
+              <div class="node">📂 Drop your src/ into an oF project</div>
+              <div class="node">🧩 Compile your sketch → .wasm + .js + .html</div>
+              <div class="node">🚀 Publish to GitHub Pages</div>
+            </div>
+            <div class="arrow">↓</div>
+            <div class="node live"><span class="i">🌐</span> Live at https://&lt;you&gt;.github.io/&lt;repo&gt;/</div>
+          </div>
+        </section>
+
+        <section id="uploader">
+          <h2><span class="hash">#</span>One-click uploader</h2>
+          <p>The fastest route skips the template entirely. The
+            <a href="../uploader/">web uploader</a> is a browser app that wires up GitHub for you.</p>
+          <div class="pipe">
+            <div class="node you"><span class="i">🔑</span> Paste a GitHub token → drop in your src/ → “Create my project”</div>
+            <div class="arrow">↓</div>
+            <div class="group">
+              <p class="glabel">🖥️ The uploader — runs entirely in your browser</p>
+              <div class="node">① Create a new repository</div>
+              <div class="node">② Commit src/ (and bin/data/)</div>
+              <div class="node">③ Add the current web.yml workflow</div>
+              <div class="node">④ Turn on GitHub Pages</div>
+            </div>
+            <div class="arrow">↓</div>
+            <div class="node live"><span class="i">🌐</span> GitHub Actions builds it → your sketch is live</div>
+          </div>
+          <div class="callout"><b>No server, no setup.</b> The token you paste stays only in your browser tab
+            and is sent straight to GitHub — never to us. See the
+            <a href="../uploader/privacy.html">Privacy Policy</a>.</div>
+        </section>
+
+        <section id="start">
+          <h2><span class="hash">#</span>Quick start</h2>
+          <h3>Option A — Web uploader <span style="color:var(--str)">(easiest)</span></h3>
+          <p>Open the <a href="../uploader/">uploader</a>, paste a token, drop in your <code>src/</code>
+            (a folder, a <code>.zip</code>, or loose files), and click <b>Create my project</b>.</p>
+          <h3>Option B — Use the template</h3>
+          <p>On the <a href="https://github.com/MaxFishman/OpenFrameworksTest" target="_blank" rel="noopener">repo</a>,
+            click <b>Use this template</b>, replace the demo code in <code>src/</code> with your own, push to
+            <code>main</code>, and do the one-time <a href="#pages">Pages setup</a>.</p>
+          <h3>Option C — Add the workflow to an existing repo</h3>
+          <p>Copy <code>.github/workflows/web.yml</code> into your repo, make sure your code is in a top-level
+            <code>src/</code> folder (assets in <code>bin/data/</code>), push to <code>main</code>, and enable Pages.</p>
+          <div class="callout warn"><b>Standard layout required.</b> The workflow looks for exactly
+            <code>src/</code> and <code>bin/data/</code>. Don't commit your own <code>bin/</code>, <code>obj/</code>,
+            Makefiles, or an openFrameworks copy.</div>
+        </section>
+
+        <section id="pages">
+          <h2><span class="hash">#</span>Enable GitHub Pages (one-time)</h2>
+          <p>The workflow builds on every push, but GitHub won't publish until you point Pages at Actions:</p>
+          <ol>
+            <li>Repo → <b>Settings</b> → <b>Pages</b>.</li>
+            <li>Under <b>Build and deployment → Source</b>, choose <b>GitHub Actions</b>.</li>
+            <li>Push again (or re-run the workflow) and it deploys.</li>
+          </ol>
+          <pre><code>https://&lt;your-github-username&gt;.github.io/&lt;your-repo-name&gt;/</code></pre>
+          <div class="callout"><b>First visit may reload once.</b> A tiny service worker installs the
+            cross-origin-isolation headers openFrameworks' threads need, then reloads. Normal — once only.</div>
+        </section>
+
+        <section id="webcode">
+          <h2><span class="hash">#</span>Writing code that works on the web</h2>
+          <ul>
+            <li><b>Target openFrameworks 0.12.1</b> — the version the workflow downloads.</li>
+            <li><b>Window setup.</b> <code>src/main.cpp</code> uses <code>ofGLWindowSettings</code> in
+              <code>OF_WINDOW</code> mode — correct for the web.</li>
+            <li><b>Fullscreen must be user-triggered</b> (a key or click), routed through Emscripten — you
+              can't force it at startup. The demo wires the <code>f</code> key and a Fullscreen button.</li>
+            <li><b>Assets load relative to <code>bin/data/</code></b> — e.g. <code>img.load("photo.png")</code>.</li>
+            <li><b>Don't block the main thread.</b> No infinite loops — the browser needs each frame to breathe.</li>
+            <li><b>Handle resize.</b> The canvas can change size; re-allocate FBOs in <code>windowResized()</code>.</li>
+          </ul>
+        </section>
+
+        <section id="workflow">
+          <h2><span class="hash">#</span>What the workflow does</h2>
+          <p><code>.github/workflows/web.yml</code> in plain English:</p>
+          <ol>
+            <li><b>Trigger</b> on every push to <code>main</code> (and manually from the Actions tab).</li>
+            <li><b>Check out</b> your repo into <code>sketch/</code>.</li>
+            <li><b>Clone</b> openFrameworks 0.12.1 and download its prebuilt web libraries.</li>
+            <li><b>Start Emscripten</b> (<code>emscripten/emsdk:4.0.4</code>) in Docker.</li>
+            <li><b>Build openFrameworks for the web</b> — the slow step, but <b>cached</b> between runs with
+              <code>actions/cache</code>, so repeat builds skip it.</li>
+            <li><b>Set up your project</b> — copy <code>src/</code> + <code>bin/data/</code> into an oF app, add the
+              web Makefile, a <code>bin/data</code> placeholder, and a <code>reallocarray</code> shim.</li>
+            <li><b>Compile your sketch</b> → <code>.wasm</code> + <code>.js</code> + <code>.html</code>.</li>
+            <li><b>Make it Pages-ready</b> — add the service worker for cross-origin isolation (and, in this repo, a
+              combined offline/PWA worker), reskin the page, and fix fullscreen.</li>
+            <li><b>Package &amp; deploy</b> to GitHub Pages.</li>
+          </ol>
+        </section>
+
+        <section id="trouble">
+          <h2><span class="hash">#</span>Troubleshooting</h2>
+          <p>Open the <b>Actions</b> tab, click the failing run, and read the logs — the error is almost
+            always in the <b>Build the sketch for the web</b> step.</p>
+          <table>
+            <thead><tr><th>Symptom</th><th>Likely cause &amp; fix</th></tr></thead>
+            <tbody>
+              <tr><td>C++ compile errors</td><td>A bug in your <code>src/</code> or an API missing in oF 0.12.1. Fix what the compiler points at.</td></tr>
+              <tr><td>Builds locally, fails here</td><td>You're on a different oF version locally. Match 0.12.1, or pin the workflow.</td></tr>
+              <tr><td>Blank / stuck on “Downloading…”</td><td>Open the browser console (F12). Often a missing asset path or a crash in <code>setup()</code>.</td></tr>
+              <tr><td>Assets don't load</td><td>They must be in <code>bin/data/</code>, loaded with relative paths, committed, with exact name/case.</td></tr>
+              <tr><td>Fullscreen does nothing</td><td>It must be triggered by a key/click, not called automatically.</td></tr>
+              <tr><td>Deploy step fails</td><td>Pages isn't enabled or isn't set to “GitHub Actions.” Do the <a href="#pages">one-time setup</a>.</td></tr>
+              <tr><td>Reloads once on first visit</td><td>Expected — the service worker installs the threading headers, then reloads.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="faq">
+          <h2><span class="hash">#</span>FAQ</h2>
+          <details><summary>Do I need to install anything?</summary><p>No. You can edit on GitHub directly. For local dev, install openFrameworks 0.12.1 and use your IDE — but the web build only happens on GitHub's servers.</p></details>
+          <details><summary>Why does the page reload once?</summary><p>openFrameworks web builds use threads, which need special security headers GitHub Pages can't send. A tiny helper installs them and reloads so they take effect. First load only.</p></details>
+          <details><summary>Is the uploader's GitHub token safe to paste?</summary><p>It lives only in that browser tab (<code>sessionStorage</code>) and goes straight to GitHub's API — never to any server of ours. Use a short expiration and the minimum scopes, and revoke it anytime in GitHub settings.</p></details>
+          <details><summary>How long until my changes are live?</summary><p>The first build is ~10–15 min; cached builds are a couple of minutes, plus a short propagation delay after deploy. Watch the Actions tab.</p></details>
+          <details><summary>Is my sketch public?</summary><p>If your repo is public and Pages is on, anyone with the URL can view it. Private-repo Pages needs a paid GitHub plan.</p></details>
+        </section>
+
+        <footer>
+          <div><a href="../uploader/">Uploader</a> · <a href="../gallery/">Gallery</a> · <a href="../">Demo</a> · <a href="https://github.com/MaxFishman/OpenFrameworksTest" target="_blank" rel="noopener">GitHub</a></div>
+          <div class="credit" style="margin-top:10px">Built by <b>Max Fishman</b> + <b>Luisa Pinzon</b> · Executive Directors — Digital Arts</div>
+        </footer>
+      </main>
+    </div>
+  </div>
+</div>
+
+<script>
+// highlight the current section in the sidebar
+const links = [...document.querySelectorAll('nav.side a')];
+const map = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+const obs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ links.forEach(l=>l.classList.remove('active'));
+    const a = map.get(e.target.id); if(a) a.classList.add('active'); } });
+}, { rootMargin:'-20% 0px -70% 0px', threshold:0 });
+document.querySelectorAll('section[id]').forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>

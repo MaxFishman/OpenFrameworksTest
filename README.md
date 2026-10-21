@@ -11,7 +11,7 @@
 ![WebAssembly](https://img.shields.io/badge/WebAssembly-.wasm-9ece6a?style=for-the-badge&labelColor=0b0e14)
 ![PWA offline](https://img.shields.io/badge/PWA-installable%20%C2%B7%20offline-ff9e64?style=for-the-badge&labelColor=0b0e14)
 
-**[▶ Live demo](https://maxfishman.github.io/OpenFrameworksTest/)** · **[⚡ One-click uploader](https://maxfishman.github.io/OpenFrameworksTest/uploader/)**
+**[▶ Live demo](https://maxfishman.github.io/OpenFrameworksTest/)** · **[⚡ Uploader](https://maxfishman.github.io/OpenFrameworksTest/uploader/)** · **[🖼️ Gallery](https://maxfishman.github.io/OpenFrameworksTest/gallery/)** · **[📖 Docs](https://maxfishman.github.io/OpenFrameworksTest/docs/)**
 
 </div>
 
@@ -131,7 +131,10 @@ See [`web/uploader/`](web/uploader/) for the source, and the
 ├── web/                       ← extras layered onto the published page (not the sketch)
 │   ├── sw.js                  ← combined COOP/COEP + offline service worker (demo)
 │   ├── icons/                 ← PWA / favicon icons
-│   └── uploader/              ← the one-click publish app (index, privacy, terms)
+│   ├── og/                    ← social-preview (Open Graph) image
+│   ├── uploader/              ← the one-click publish app (index, privacy, terms, QR)
+│   ├── gallery/               ← showcase of published sketches (auto-discovers a topic)
+│   └── docs/                  ← standalone themed docs page
 └── README.md                  ← you are here
 ```
 
@@ -303,7 +306,7 @@ almost always in the **“Build the sketch for the web”** step.
 | **Deploy step fails**                              | GitHub Pages isn't enabled, or isn't set to “GitHub Actions.” Do the [one-time setup](#-enabling-github-pages-one-time).                  |
 | **Page reloads itself once on first visit**        | Expected — `coi-serviceworker` installs, then reloads so the threading headers apply.                                                    |
 | **Addons don't work**                              | The workflow doesn't copy `addons.make` by default. See Advanced.                                                                        |
-| **Build takes ~10–15 minutes**                     | Normal — it compiles all of openFrameworks from scratch each run. See caching in Advanced.                                               |
+| **First build takes ~10–15 minutes**               | Normal — the first run compiles all of openFrameworks. Later builds are cached (~1–2 min). See caching in Advanced.                      |
 
 ---
 
@@ -338,12 +341,19 @@ git clone --depth 1 --branch 0.12.1 https://github.com/openframeworks/openFramew
 Change `0.12.1` to another release tag to match the version you develop against. Keep
 the Emscripten image (`emscripten/emsdk:4.0.4`) compatible with it.
 
-### Speeding up builds with caching
+### Build caching (already on)
 
-Every run rebuilds openFrameworks from scratch, which is slow. For a class with many
-students, you can add [`actions/cache`](https://github.com/actions/cache) to cache the
-compiled framework between runs. This is optional and a nice exercise once you're
-comfortable with the basics.
+The first build compiles all of openFrameworks (~10–15 min), but the workflow **caches the
+compiled framework** with [`actions/cache`](https://github.com/actions/cache), so later
+builds restore it and skip that step — dropping to ~1–2 minutes. Two details make the cache
+actually work (both already handled in `web.yml`):
+
+- **`touch` the restored objects** so `make` sees them as newer than the freshly-cloned
+  sources and doesn't recompile.
+- **`chown` the Docker build outputs** back to the runner so `actions/cache` can read *all*
+  of them when it saves — otherwise the cache is incomplete and oF rebuilds anyway.
+
+The cache key pins the oF and Emscripten versions, so bumping either starts a fresh cache.
 
 ---
 
@@ -400,8 +410,9 @@ scaled to fit the page / fullscreen.
 <details>
 <summary><b>How long until my changes are live?</b></summary>
 
-A full build is roughly 10–15 minutes, plus a short propagation delay after deploy.
-Watch the **Actions** tab for progress.
+The first build is roughly 10–15 minutes; after that the compiled framework is cached, so
+later builds take ~1–2 minutes, plus a short propagation delay after deploy. Watch the
+**Actions** tab for progress.
 </details>
 
 ---

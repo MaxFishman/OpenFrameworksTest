@@ -1,0 +1,12 @@
+{
+  "comment": "Curated sketches shown in the gallery. The gallery ALSO auto-discovers any public repo tagged with the GitHub topic 'of-web-sketch' and merges it here (deduped by live URL). To feature a sketch, add an entry below.",
+  "sketches": [
+    {
+      "title": "Movers (demo)",
+      "author": "maxfishman",
+      "repo": "https://github.com/MaxFishman/OpenFrameworksTest",
+      "live": "https://maxfishman.github.io/OpenFrameworksTest/",
+      "tags": ["demo", "particles"]
+    }
+  ]
+}
