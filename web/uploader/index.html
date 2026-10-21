@@ -625,6 +625,10 @@ async function publish(){
     await api("/user/repos", { method:"POST",
       body: JSON.stringify({ name, private:false, auto_init:true,
         description:"openFrameworks sketch, built for the web" }) });
+    // Tag it so it shows up in the gallery automatically (best-effort — a token without
+    // the needed access just skips this, and the sketch still publishes fine).
+    try{ await api(`/repos/${owner}/${name}/topics`, { method:"PUT",
+      body: JSON.stringify({ names:["of-web-sketch"] }) }); }catch(e){ /* non-fatal */ }
     step.className="ok"; step.textContent=`Created ${owner}/${name}`;
 
     step = logLine("run","Turning on GitHub Pages…");
