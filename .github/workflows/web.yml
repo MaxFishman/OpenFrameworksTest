@@ -113,22 +113,25 @@ jobs:
           #canvas:fullscreen{position:fixed!important;top:0!important;left:0!important;
             width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important;
             border-radius:0!important;box-shadow:none!important;}
-          /* small, dismissable "publish your own sketch" button, top-left */
-          #ofUploadBtn{position:fixed;top:18px;left:18px;z-index:30;display:flex;align-items:center;gap:9px;
-            text-decoration:none;cursor:pointer;color:#fff;letter-spacing:.02em;
-            font:600 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
-            padding:10px 11px 10px 14px;border-radius:11px;
-            background:rgba(22,22,28,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-            border:1px solid rgba(255,255,255,.22);box-shadow:0 4px 18px rgba(0,0,0,.35);
-            transition:background .15s ease,border-color .15s ease;}
-          #ofUploadBtn:hover{background:rgba(44,44,56,.8);border-color:rgba(255,255,255,.42);}
-          #ofUploadBtn .x{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;
-            border-radius:50%;background:rgba(255,255,255,.12);color:#cfcfd6;font-size:13px;line-height:1;}
-          #ofUploadBtn .x:hover{background:rgba(255,61,110,.92);color:#1a0710;}
+          /* prominent, dismissable "encode for web" call-to-action over the sketch */
+          #ofUploadBtn{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:30;
+            display:flex;align-items:center;gap:14px;text-decoration:none;cursor:pointer;
+            font:800 clamp(15px,2.3vw,22px)/1.1 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+            letter-spacing:.08em;text-transform:uppercase;color:#fff;background:#111016;
+            padding:18px 26px;border-radius:14px;border:1.5px solid rgba(255,61,110,.65);
+            box-shadow:0 12px 46px rgba(255,61,110,.55),0 3px 14px rgba(0,0,0,.55);
+            animation:ofpulse 2.2s ease-in-out infinite;}
+          #ofUploadBtn:hover{background:#1b1922;border-color:#ff3d6e;transform:translate(-50%,-50%) scale(1.03);}
+          #ofUploadBtn .x{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:none;
+            border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:15px;line-height:1;}
+          #ofUploadBtn .x:hover{background:#ff3d6e;color:#1a0710;}
+          @keyframes ofpulse{0%,100%{box-shadow:0 12px 46px rgba(255,61,110,.45),0 3px 14px rgba(0,0,0,.55)}
+            50%{box-shadow:0 12px 66px rgba(255,61,110,.95),0 3px 14px rgba(0,0,0,.55)}}
+          @media (prefers-reduced-motion:reduce){#ofUploadBtn{animation:none}}
           </style>
           </head>"""
           script = """  <a id="ofUploadBtn" href="https://maxfishman.github.io/OpenFrameworksTest/uploader/" title="Publish your own openFrameworks sketch">
-          <span>Publish your sketch &#8599;</span>
+          <span>Click here to encode for web</span>
           <span class="x" id="ofUploadHide" role="button" aria-label="Hide" title="Hide">&times;</span>
           </a>
           <script>
