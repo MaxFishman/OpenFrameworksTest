@@ -75,40 +75,74 @@ jobs:
           curl -fsSL -o "$OUT/coi-serviceworker.min.js" https://unpkg.com/coi-serviceworker@0.1.7/coi-serviceworker.min.js
           sed -i 's#<head>#<head>\n    <script src="coi-serviceworker.min.js"></script>#' "$OUT/index.html"
           grep -n "coi-serviceworker" "$OUT/index.html"
-          # Make fullscreen actually work. Two fixes:
-          # 1) CSS: force a fullscreen canvas to fill the viewport (the !important
-          #    rules beat emscripten's inline sizing). The 'f' key in the sketch and
-          #    the button below both rely on this to fill the screen.
-          sed -i 's|</head>|  <style>#canvas:fullscreen{position:fixed!important;top:0!important;left:0!important;width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important}</style>\n  </head>|' "$OUT/index.html"
-          grep -n "canvas:fullscreen" "$OUT/index.html"
-          # 2) Button: the template wires "Fullscreen" to Module.requestFullscreen with
-          #    pointer-lock on, which throws NotAllowedError and collapses the canvas to
-          #    0x0 -> a black screen. Intercept the click (capture phase, so it beats the
-          #    template's own handler) and just request plain fullscreen on the canvas.
+          # Reskin the page: hide the default emscripten menu/output, center the sketch
+          # on a dark stage, and keep one nice glass "Fullscreen" button. Also inject the
+          # fullscreen fixes: CSS so a fullscreen canvas fills the screen, and a safe
+          # button handler that beats the template's broken pointer-lock one (which throws
+          # NotAllowedError and collapses the canvas to 0x0 -> black). Python keeps the
+          # multi-line CSS/JS clean (the nodes app.js needs are hidden, never removed).
           python3 - "$OUT/index.html" <<'PY'
           import sys
           p = sys.argv[1]
-          snippet = """  <script>
+          style = """  <style>
+          html,body{margin:0;height:100%;overflow:hidden;background:#0d0d11;
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;}
+          /* hide the default emscripten chrome, but keep the nodes app.js references */
+          #logo,#spinner,#status,#output,#progress,
+          #controls>span:nth-child(1),#controls>span:nth-child(2){display:none!important;}
+          #header{position:static!important;background:none!important;border:0!important;
+            box-shadow:none!important;margin:0!important;padding:0!important;}
+          /* the one control we keep, floated top-right */
+          #controls{position:fixed;top:18px;right:18px;z-index:30;margin:0;}
+          #fullscreenButton{-webkit-appearance:none;appearance:none;cursor:pointer;
+            font:600 14px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+            color:#fff;letter-spacing:.02em;padding:11px 17px;border-radius:11px;
+            background:rgba(22,22,28,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+            border:1px solid rgba(255,255,255,.22);box-shadow:0 4px 18px rgba(0,0,0,.35);
+            transition:background .15s ease,transform .06s ease,border-color .15s ease;}
+          #fullscreenButton:hover{background:rgba(44,44,56,.8);border-color:rgba(255,255,255,.42);}
+          #fullscreenButton:active{transform:translateY(1px);}
+          #fullscreenButton:focus-visible{outline:2px solid #7dd3fc;outline-offset:2px;}
+          /* center the sketch on the stage, scaled to the viewport, 4:3 preserved */
+          .emscripten_border{border:0!important;margin:0!important;padding:0!important;
+            min-height:100vh;display:flex;align-items:center;justify-content:center;}
+          #canvas{display:block;background:#000;aspect-ratio:4/3!important;
+            width:min(94vw,calc(92vh*4/3))!important;height:auto!important;
+            border-radius:8px;box-shadow:0 14px 60px rgba(0,0,0,.6);}
+          #canvas:fullscreen{position:fixed!important;top:0!important;left:0!important;
+            width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important;
+            border-radius:0!important;box-shadow:none!important;}
+          </style>
+          </head>"""
+          script = """  <script>
           (function(){
             function go(){
               var c=document.getElementById('canvas'); if(!c) return;
               if(document.fullscreenElement){ if(document.exitFullscreen) document.exitFullscreen(); return; }
               var req=c.requestFullscreen||c.webkitRequestFullscreen; if(req) req.call(c);
             }
+            // beat the template's broken handler (pointer-lock -> 0x0 canvas -> black)
             document.addEventListener('click',function(e){
               var t=e.target;
               if(t&&t.id==='fullscreenButton'){ e.stopImmediatePropagation(); e.preventDefault(); go(); }
             },true);
+            function label(){
+              var b=document.getElementById('fullscreenButton'); if(!b) return;
+              b.value = document.fullscreenElement ? '\\u26f6  Exit' : '\\u26f6  Fullscreen';
+            }
+            document.addEventListener('fullscreenchange',label);
+            document.addEventListener('DOMContentLoaded',label);
+            label();
           })();
           </script>
           </body>"""
           s = open(p).read()
-          assert '</body>' in s, 'no </body> in index.html'
-          s = s.replace('</body>', snippet, 1)
+          assert '</head>' in s and '</body>' in s, 'index.html missing head/body'
+          s = s.replace('</head>', style, 1).replace('</body>', script, 1)
           open(p,'w').write(s)
-          print('injected fullscreen button fix')
+          print('reskinned page + injected fullscreen fixes')
           PY
-          grep -n "fullscreenButton" "$OUT/index.html"
+          grep -nE "fullscreenButton|canvas:fullscreen|emscripten_border" "$OUT/index.html" | head
           ls -la "$OUT"
 
       - name: Package the web page
