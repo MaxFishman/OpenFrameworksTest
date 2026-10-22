@@ -631,12 +631,30 @@ function renderFiles(){
   const pf = $("#preflight");
   if(files.length){
     pf.classList.remove("hidden");
+    // scan the source for addon includes: bundled addons are auto-included by the workflow;
+    // anything else needs manual setup and likely won't build.
+    const BUNDLED=["ofxEmscripten","ofxGui","ofxXmlSettings","ofxSvg","ofxOsc","ofxNetwork",
+      "ofxThreadedImageLoader","ofxVectorGraphics","ofxAssimpModelLoader","ofx3DModelLoader","ofxOpenCv","ofxKinect","ofxPoco"];
+    const used=new Set();
+    for(const f of files){
+      if(!/\.(cpp|h|hpp|cc|cxx|c|hh)$/i.test(f.path)) continue;
+      let txt=""; try{ txt=atob(f.b64); }catch(e){ continue; }
+      const re=/#include\s*["<](ofx[A-Za-z0-9_]+)\.h/g; let m;
+      while((m=re.exec(txt))) used.add(m[1]);
+    }
+    const bundledUsed=new Set(), thirdParty=new Set();
+    for(const h of used){
+      let best=""; for(const b of BUNDLED) if((h===b||h.startsWith(b)) && b.length>best.length) best=b;
+      if(best){ if(best!=="ofxEmscripten") bundledUsed.add(best); } else thirdParty.add(h);
+    }
     const row=(state,txt)=>`<div class="pf-row ${state}">${state==="ok"?"✓":state==="bad"?"✗":"⚠"} ${txt}</div>`;
     pf.innerHTML =
       row(hasCpp?"ok":"bad", `${cpp.length} C++ source file${cpp.length!==1?"s":""} → src/`)+
       row(hasMain?"ok":"warn", hasMain ? "main.cpp found"
           : "no main.cpp — openFrameworks needs one. Did you zip the project folder itself (not its parent)?")+
-      row("ok", `${dataCount} data file${dataCount!==1?"s":""} → bin/data/`);
+      row("ok", `${dataCount} data file${dataCount!==1?"s":""} → bin/data/`)+
+      (bundledUsed.size ? row("ok", `addons auto-included: ${esc([...bundledUsed].join(", "))}`) : "")+
+      (thirdParty.size ? row("warn", `addon(s) not bundled with openFrameworks: ${esc([...thirdParty].join(", "))} — these need manual setup and may not build`) : "");
   } else pf.classList.add("hidden");
   const note=$("#skipNote");
   if(skipped.length){ note.classList.remove("hidden");

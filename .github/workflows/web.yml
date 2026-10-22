@@ -81,6 +81,27 @@ jobs:
           EOF
           cp of/scripts/templates/emscripten/Makefile of/apps/myApps/sketch/
           cp of/scripts/templates/emscripten/config.make of/apps/myApps/sketch/
+          # Auto-include openFrameworks addons the sketch #includes (e.g. ofxGui), so common
+          # addon-based sketches build with no manual setup. Only addons that ship with
+          # openFrameworks (present in of/addons) are added — a bundled addon whose header the
+          # sketch references goes into addons.make. Third-party addons aren't on disk here, so
+          # they won't be added (the sketch's #include will still error, which is expected).
+          APP=of/apps/myApps/sketch
+          SKETCH_INCS=$(grep -rhoE '#include[[:space:]]*["<]ofx[A-Za-z0-9_]+\.h' "$APP/src" 2>/dev/null | grep -oE 'ofx[A-Za-z0-9_]+\.h' | sort -u)
+          : > "$APP/addons.make"
+          if [ -n "$SKETCH_INCS" ]; then
+            for dir in of/addons/ofx*/; do
+              [ -d "$dir" ] || continue
+              name=$(basename "$dir")
+              [ "$name" = "ofxEmscripten" ] && continue   # already wired by the web template
+              HDRS=$(find "$dir" -name '*.h' -printf '%f\n' 2>/dev/null | sort -u)
+              if [ -n "$HDRS" ] && printf '%s\n' "$HDRS" | grep -qxFf <(printf '%s\n' "$SKETCH_INCS"); then
+                echo "$name" >> "$APP/addons.make"
+              fi
+            done
+          fi
+          sort -u -o "$APP/addons.make" "$APP/addons.make" 2>/dev/null || true
+          if [ -s "$APP/addons.make" ]; then echo "auto-included addons:"; cat "$APP/addons.make"; else echo "no bundled addons referenced"; fi
           ls -la of/apps/myApps/sketch/src
 
       - name: Build the sketch for the web
