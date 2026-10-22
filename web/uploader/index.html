@@ -631,10 +631,15 @@ function renderFiles(){
   const pf = $("#preflight");
   if(files.length){
     pf.classList.remove("hidden");
-    // scan the source for addon includes: bundled addons are auto-included by the workflow;
-    // anything else needs manual setup and likely won't build.
-    const BUNDLED=["ofxEmscripten","ofxGui","ofxXmlSettings","ofxSvg","ofxOsc","ofxNetwork",
-      "ofxThreadedImageLoader","ofxVectorGraphics","ofxAssimpModelLoader","ofx3DModelLoader","ofxOpenCv","ofxKinect","ofxPoco"];
+    // scan the source for addon includes and classify them:
+    //  AUTO = handled automatically (bundled with oF, or in the build's clone registry)
+    //  INCOMPAT = can't run in a browser (native libs / hardware / UDP sockets)
+    //  anything else = unknown third-party addon (may need manual setup)
+    const AUTO=["ofxEmscripten","ofxGui","ofxXmlSettings","ofxSvg","ofxVectorGraphics","ofxThreadedImageLoader",
+      "ofxAssimpModelLoader","ofx3DModelLoader","ofxBox2d","ofxFft","ofxDatGui","ofxAnimatable","ofxEasing","ofxPostProcessing"];
+    const INCOMPAT={ofxOpenCv:"OpenCV isn't available for WebAssembly", ofxCv:"depends on OpenCV",
+      ofxKinect:"needs Kinect hardware", ofxNetwork:"TCP/UDP sockets don't work in the browser",
+      ofxOsc:"OSC uses UDP, which browsers can't send", ofxPoco:"the Poco library isn't built for the web"};
     const used=new Set();
     for(const f of files){
       if(!/\.(cpp|h|hpp|cc|cxx|c|hh)$/i.test(f.path)) continue;
@@ -642,10 +647,13 @@ function renderFiles(){
       const re=/#include\s*["<](ofx[A-Za-z0-9_]+)\.h/g; let m;
       while((m=re.exec(txt))) used.add(m[1]);
     }
-    const bundledUsed=new Set(), thirdParty=new Set();
+    const match=(h,names)=>{ let best=""; for(const b of names) if((h===b||h.startsWith(b)) && b.length>best.length) best=b; return best; };
+    const autoUsed=new Set(), incompatUsed=new Map(), unknownUsed=new Set();
     for(const h of used){
-      let best=""; for(const b of BUNDLED) if((h===b||h.startsWith(b)) && b.length>best.length) best=b;
-      if(best){ if(best!=="ofxEmscripten") bundledUsed.add(best); } else thirdParty.add(h);
+      const au=match(h,AUTO), inc=match(h,Object.keys(INCOMPAT));
+      if(au && au.length>=inc.length){ if(au!=="ofxEmscripten") autoUsed.add(au); }
+      else if(inc){ incompatUsed.set(inc, INCOMPAT[inc]); }
+      else unknownUsed.add(h);
     }
     const row=(state,txt)=>`<div class="pf-row ${state}">${state==="ok"?"✓":state==="bad"?"✗":"⚠"} ${txt}</div>`;
     pf.innerHTML =
@@ -653,8 +661,9 @@ function renderFiles(){
       row(hasMain?"ok":"warn", hasMain ? "main.cpp found"
           : "no main.cpp — openFrameworks needs one. Did you zip the project folder itself (not its parent)?")+
       row("ok", `${dataCount} data file${dataCount!==1?"s":""} → bin/data/`)+
-      (bundledUsed.size ? row("ok", `addons auto-included: ${esc([...bundledUsed].join(", "))}`) : "")+
-      (thirdParty.size ? row("warn", `addon(s) not bundled with openFrameworks: ${esc([...thirdParty].join(", "))} — these need manual setup and may not build`) : "");
+      (autoUsed.size ? row("ok", `addons handled automatically: ${esc([...autoUsed].join(", "))}`) : "")+
+      (incompatUsed.size ? row("bad", `won't run in a browser: ${esc([...incompatUsed].map(([k,v])=>`${k} (${v})`).join("; "))}`) : "")+
+      (unknownUsed.size ? row("warn", `addon(s) not recognized: ${esc([...unknownUsed].join(", "))} — may need manual setup and might not build`) : "");
   } else pf.classList.add("hidden");
   const note=$("#skipNote");
   if(skipped.length){ note.classList.remove("hidden");

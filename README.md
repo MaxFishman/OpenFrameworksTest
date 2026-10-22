@@ -305,7 +305,7 @@ almost always in the **“Build the sketch for the web”** step.
 | **Fullscreen does nothing**                        | It must be triggered by a key/click (try `f` or the button), not called automatically. If you customized this, see `toggleFullscreen()`. |
 | **Deploy step fails**                              | GitHub Pages isn't enabled, or isn't set to “GitHub Actions.” Do the [one-time setup](#-enabling-github-pages-one-time).                  |
 | **Page reloads itself once on first visit**        | Expected — `coi-serviceworker` installs, then reloads so the threading headers apply.                                                    |
-| **Addons don't work**                              | The workflow doesn't copy `addons.make` by default. See Advanced.                                                                        |
+| **Addons don't work**                              | Bundled + registry addons are auto-detected; others (or native/hardware ones like `ofxOpenCv`) may be unsupported on the web. See Advanced. |
 | **First build takes ~10–15 minutes**               | Normal — the first run compiles all of openFrameworks. Later builds are cached (~1–2 min). See caching in Advanced.                      |
 
 ---
@@ -316,19 +316,22 @@ You only need this section if you're pushing past the basics.
 
 ### Using addons
 
-The default workflow copies your `src/` and `bin/data/` but **not** an `addons.make`
-file, so addon-based projects won't build as-is. `ofxEmscripten` (the web windowing
-addon) is included automatically; other addons require changes:
+The workflow **auto-detects addons** your sketch `#include`s and wires them up for you —
+you don't write an `addons.make`:
 
-1. Make sure the addon source is available to the build (commit it into the repo, or
-   add a step that clones it into `of/addons/`).
-2. In the **“Set up the sketch project”** step of `web.yml`, also copy your
-   `addons.make`:
-   ```yaml
-   if [ -f sketch/addons.make ]; then cp sketch/addons.make of/apps/myApps/sketch/; fi
-   ```
-3. Note that **not all desktop addons work on the web** (anything using native
-   system APIs, certain hardware, etc.). Test and expect some to be unsupported.
+- **Bundled addons** (anything that ships with openFrameworks — `ofxGui`,
+  `ofxXmlSettings`, `ofxSvg`, `ofxVectorGraphics`, …) are added automatically when the
+  sketch references them.
+- **Popular third-party addons** are cloned at build time from a small registry in
+  `web.yml` (the **“Set up the sketch project”** step): `ofxBox2d`, `ofxFft`, `ofxDatGui`,
+  `ofxAnimatable`, `ofxEasing`, `ofxPostProcessing`. To support another, add a
+  `name|git-repo` line to that `REGISTRY` list.
+
+**Not everything can run in a browser.** Sketches compile to WebAssembly, so addons that
+need native libraries, hardware, or raw sockets won't work — notably **`ofxOpenCv`**
+(OpenCV isn't built for WebAssembly), **`ofxKinect`** (hardware), and **`ofxNetwork` /
+`ofxOsc`** (TCP/UDP sockets; browsers only allow WebSockets). The uploader's pre-flight
+check flags these **before** you spend a build.
 
 ### Pinning / changing the openFrameworks version
 

@@ -100,8 +100,31 @@ jobs:
               fi
             done
           fi
+          # Registry of popular, web-compatible third-party addons (name|git-repo). If the sketch
+          # references one and it isn't already bundled, clone it so it builds. Best-effort: a
+          # failed clone just skips that addon (the #include then errors, as it would anyway).
+          REGISTRY="ofxBox2d|https://github.com/vanderlin/ofxBox2d
+          ofxFft|https://github.com/kylemcdonald/ofxFft
+          ofxDatGui|https://github.com/braitsch/ofxDatGui
+          ofxAnimatable|https://github.com/armadillu/ofxAnimatable
+          ofxEasing|https://github.com/arturoc/ofxEasing
+          ofxPostProcessing|https://github.com/neilmendoza/ofxPostProcessing"
+          if [ -n "$SKETCH_INCS" ]; then
+            printf '%s\n' "$REGISTRY" | while IFS='|' read -r aname aurl; do
+              aname=$(printf '%s' "$aname" | tr -d '[:space:]'); aurl=$(printf '%s' "$aurl" | tr -d '[:space:]')
+              [ -z "$aname" ] && continue
+              if printf '%s\n' "$SKETCH_INCS" | grep -qxF "$aname.h" && [ ! -d "of/addons/$aname" ]; then
+                echo "fetching third-party addon $aname from $aurl"
+                if git clone --depth 1 "$aurl" "of/addons/$aname" 2>/dev/null && [ -d "of/addons/$aname/src" ]; then
+                  echo "$aname" >> "$APP/addons.make"
+                else
+                  echo "could not fetch $aname (skipping)"; rm -rf "of/addons/$aname"
+                fi
+              fi
+            done
+          fi
           sort -u -o "$APP/addons.make" "$APP/addons.make" 2>/dev/null || true
-          if [ -s "$APP/addons.make" ]; then echo "auto-included addons:"; cat "$APP/addons.make"; else echo "no bundled addons referenced"; fi
+          if [ -s "$APP/addons.make" ]; then echo "addons for this build:"; cat "$APP/addons.make"; else echo "no addons referenced"; fi
           ls -la of/apps/myApps/sketch/src
 
       - name: Build the sketch for the web
