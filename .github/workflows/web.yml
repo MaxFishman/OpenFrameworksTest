@@ -88,6 +88,55 @@ jobs:
           docker exec -w /src/of/apps/myApps/sketch emscripten emmake make -j4 Release
           sudo chown -R "$(id -u):$(id -g)" of/apps/myApps/sketch/bin
 
+      - name: Capture a thumbnail of the sketch
+        continue-on-error: true
+        run: |
+          # Best-effort screenshot of the running sketch -> thumb.png (used by the gallery
+          # and as the per-sketch social-preview image). Runs on the RAW emscripten page
+          # (before the reskin/service-worker), served with the COOP/COEP headers the WASM
+          # threads need. Never fails the build: any problem just skips the thumbnail.
+          OUT=of/apps/myApps/sketch/bin/em/sketch
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium-browser || command -v chromium || true)
+          if [ -z "$CHROME" ]; then echo "no Chrome on runner; skipping thumbnail"; exit 0; fi
+          npm install --no-save puppeteer-core@23 pngjs@7 >/dev/null 2>&1 || { echo "deps install failed; skipping"; exit 0; }
+          node - "$OUT" "$CHROME" <<'NODE'
+          const http=require("http"), fs=require("fs"), path=require("path");
+          const puppeteer=require("puppeteer-core"); const PNG=require("pngjs").PNG;
+          const dir=process.argv[2], chrome=process.argv[3], outfile=path.join(dir,"thumb.png");
+          const T={".html":"text/html",".js":"text/javascript",".mjs":"text/javascript",".wasm":"application/wasm",
+            ".data":"application/octet-stream",".json":"application/json",".css":"text/css",".png":"image/png",
+            ".svg":"image/svg+xml",".webmanifest":"application/manifest+json",".ico":"image/x-icon",".txt":"text/plain"};
+          const H={"Cross-Origin-Opener-Policy":"same-origin","Cross-Origin-Embedder-Policy":"require-corp","Cross-Origin-Resource-Policy":"cross-origin"};
+          const server=http.createServer((req,res)=>{
+            let p=decodeURIComponent((req.url||"/").split("?")[0]); if(p.endsWith("/")) p+="index.html";
+            const f=path.join(dir,p);
+            fs.readFile(f,(e,buf)=>{ if(e){ res.writeHead(404,H); return res.end("404"); }
+              res.writeHead(200,Object.assign({"Content-Type":T[path.extname(f).toLowerCase()]||"application/octet-stream"},H)); res.end(buf); });
+          });
+          (async ()=>{
+            await new Promise(r=>server.listen(0,r));
+            const port=server.address().port;
+            const browser=await puppeteer.launch({ executablePath:chrome, headless:"new",
+              args:["--no-sandbox","--disable-dev-shm-usage","--use-angle=swiftshader","--enable-unsafe-swiftshader","--ignore-gpu-blocklist","--enable-webgl"] });
+            try{
+              const page=await browser.newPage();
+              page.on("pageerror",()=>{}); page.on("error",()=>{});
+              await page.setViewport({width:960,height:720,deviceScaleFactor:1});
+              await page.goto("http://localhost:"+port+"/",{waitUntil:"networkidle2",timeout:60000});
+              await new Promise(r=>setTimeout(r,12000));
+              await page.evaluate(()=>{ ["ofUploadBtn","ofLoading","controls","status","progress","output","spinner"].forEach(id=>{var e=document.getElementById(id); if(e) e.style.display="none";}); });
+              const canvas=await page.$("#canvas");
+              if(!canvas){ console.log("no #canvas; skipping"); return; }
+              await canvas.screenshot({path:outfile});
+              const png=PNG.sync.read(fs.readFileSync(outfile));
+              let mn=255,mx=0; for(let i=0;i<png.data.length;i+=4){ var l=(png.data[i]+png.data[i+1]+png.data[i+2])/3; if(l<mn)mn=l; if(l>mx)mx=l; }
+              if(mx-mn<12){ fs.unlinkSync(outfile); console.log("thumbnail looked blank (contrast "+(mx-mn).toFixed(0)+"); dropped"); }
+              else console.log("thumbnail captured (contrast "+(mx-mn).toFixed(0)+")");
+            } finally { await browser.close(); server.close(); }
+          })().catch(e=>{ console.log("thumbnail error:", e && e.message); });
+          NODE
+          [ -f "$OUT/thumb.png" ] && echo "thumb.png present ($(wc -c < "$OUT/thumb.png") bytes)" || echo "no thumb.png produced"
+
       - name: Make the page work on GitHub Pages
         run: |
           # openFrameworks web builds use threads (SharedArrayBuffer), which need the
@@ -97,6 +146,16 @@ jobs:
           # the uploader have no web/ dir, so they fall back to the stock coi-serviceworker,
           # which just adds the headers (proven path; their sketches still work).
           OUT=of/apps/myApps/sketch/bin/em/sketch
+          # Per-sketch social image: if a thumbnail was captured, use it as og:image;
+          # otherwise fall back to the shared brand card.
+          OWNER="${GITHUB_REPOSITORY%%/*}"; REPO="${GITHUB_REPOSITORY#*/}"
+          OWNER_LC=$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')
+          if [ -f "$OUT/thumb.png" ]; then
+            export OG_IMAGE="https://${OWNER_LC}.github.io/${REPO}/thumb.png"
+          else
+            export OG_IMAGE="https://maxfishman.github.io/OpenFrameworksTest/og/og-image.png"
+          fi
+          echo "og:image = $OG_IMAGE"
           if [ -f sketch/web/sw.js ]; then
           cp sketch/web/sw.js "$OUT/sw.js"
           sed -i "s/__SW_VERSION__/${GITHUB_SHA:-$(date +%s)}/" "$OUT/sw.js"
@@ -124,12 +183,12 @@ jobs:
           # NotAllowedError and collapses the canvas to 0x0 -> black). Python keeps the
           # multi-line CSS/JS clean (the nodes app.js needs are hidden, never removed).
           python3 - "$OUT/index.html" <<'PY'
-          import sys
+          import sys, os
           p = sys.argv[1]
           style = """  <meta property="og:type" content="website">
           <meta property="og:title" content="openFrameworks sketch">
           <meta property="og:description" content="A creative-coding sketch running in the browser via WebAssembly.">
-          <meta property="og:image" content="https://maxfishman.github.io/OpenFrameworksTest/og/og-image.png">
+          <meta property="og:image" content="__OG_IMAGE__">
           <meta name="twitter:card" content="summary_large_image">
           <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNmZjNjNjQiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMCAyMC40KSBzY2FsZSgwLjQpIiBmaWxsPSIjZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik01OCAyOUM1OCAxMyA0NSAwIDI5IDAgMTMgMCAwIDEzIDAgMjkgMCA0NSAxMyA1OCAyOSA1OCA0NSA1OCA1OCA0NSA1OCAyOVoiLz48cmVjdCB4PSI1OSIgd2lkdGg9IjI1IiBoZWlnaHQ9IjU4Ii8+PHJlY3QgeD0iODUiIHk9IjI2IiB3aWR0aD0iMTUiIGhlaWdodD0iMTUiLz48cGF0aCBkPSJNODUgMCAxMTAgMCA4NSAyNSA4NSAwWiIvPjwvZz48L3N2Zz4K">
           <style>
@@ -231,27 +290,42 @@ jobs:
             var ov=document.getElementById('ofLoading'); if(!ov) return;
             var fill=document.getElementById('ofFill'), label=document.getElementById('ofLabel');
             var st=document.getElementById('status'), pr=document.getElementById('progress');
-            var started=false, done=false;
-            function hide(){ if(done) return; done=true; if(fill) fill.style.width='100%';
+            var started=false, ran=false, done=false, iv;
+            function hide(){ if(done) return; done=true; ran=true; if(fill) fill.style.width='100%';
               ov.classList.add('done'); setTimeout(function(){ if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); },600); }
+            function fail(msg){ if(done||ran) return; done=true; if(iv) clearInterval(iv);
+              ov.classList.remove('done');
+              var mk=ov.querySelector('.of-mark'); if(mk) mk.style.display='none';
+              var ba=ov.querySelector('.of-bar'); if(ba) ba.style.display='none';
+              if(label){ label.innerHTML='<div style="max-width:min(430px,86vw);text-align:center;color:#ff8098;line-height:1.55">'
+                +(msg||'This sketch did not start.')
+                +'<br><br><a href="#" onclick="location.reload();return false" style="color:#7dd3fc;text-decoration:none">reload</a></div>'; }
+            }
             function upd(){
               if(done) return;
               var txt = st ? (st.textContent||'') : '';
+              if(!ran && /\\b(error|exception|abort|failed)\\b/i.test(txt)){ fail('This sketch failed to load. If you just published it, the build may still be finishing \\u2014 check the Actions tab.'); return; }
               if(txt){ started=true; if(label) label.textContent=txt; }
               if(pr && pr.max){ if(fill) fill.style.width=Math.min(100,(pr.value/pr.max)*100)+'%'; }
               else { var m=txt.match(/\\((\\d+(?:\\.\\d+)?)\\/(\\d+)\\)/); if(m&&fill) fill.style.width=Math.min(100,(parseFloat(m[1])/parseFloat(m[2]))*100)+'%'; }
               if(/complete/i.test(txt)) setTimeout(hide,1500);     // backup trigger
-              if(started && txt===''){ hide(); }                   // emscripten clears status when the app starts
+              if(started && txt===''){ ran=true; hide(); }         // emscripten clears status when the app starts
             }
+            // a real load error, if the sketch never actually starts within a grace window
+            function onErr(){ setTimeout(function(){ if(!done && !ran) fail('This sketch hit an error while loading.'); }, 2500); }
+            window.addEventListener('error', onErr);
+            window.addEventListener('unhandledrejection', onErr);
             try{ var mo=new MutationObserver(upd);
               if(st) mo.observe(st,{childList:true,characterData:true,subtree:true});
               if(pr) mo.observe(pr,{attributes:true}); }catch(e){}
-            var iv=setInterval(upd,250);
-            setTimeout(function(){ clearInterval(iv); hide(); },180000);
+            iv=setInterval(upd,250);
+            setTimeout(function(){ if(!done && !ran) fail('This sketch is taking too long to load. Try reloading, or check the build on the Actions tab.'); }, 90000);
+            setTimeout(function(){ if(iv) clearInterval(iv); if(!done) hide(); }, 180000);
             upd();
           })();
           </script>
           </body>"""
+          style = style.replace('__OG_IMAGE__', os.environ.get('OG_IMAGE', 'https://maxfishman.github.io/OpenFrameworksTest/og/og-image.png'))
           s = open(p).read()
           assert '</head>' in s and '</body>' in s, 'index.html missing head/body'
           s = s.replace('</head>', style, 1).replace('</body>', script, 1)

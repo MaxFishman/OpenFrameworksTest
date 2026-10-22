@@ -317,6 +317,9 @@
         <label class="field" for="repoName">repository name</label>
         <input type="text" id="repoName" value="my-of-sketch" autocomplete="off" spellcheck="false">
         <p class="urlline">live at <b id="urlPreview">https://you.github.io/my-of-sketch/</b></p>
+        <label class="field" for="sketchTitle" style="margin-top:16px">title
+          <span style="color:var(--faint);text-transform:none;letter-spacing:0">— optional, shown in the gallery</span></label>
+        <input type="text" id="sketchTitle" placeholder="e.g. Particle Field" autocomplete="off" maxlength="80">
         <div class="navrow">
           <span class="spacer"></span>
           <button class="btn-primary" id="toFiles">Next: add files →</button>
@@ -616,20 +619,36 @@ async function publish(){
   $("#workTitle").textContent = `Building ${name}…`;
 
   const owner = me.login;
+  const title = ($("#sketchTitle") ? ($("#sketchTitle").value||"") : "").trim();
+  const liveUrl = `https://${owner}.github.io/${name}/`;
+  const repoDesc = title ? (title + " — openFrameworks sketch") : "openFrameworks sketch, built for the web";
   const web_yml = (typeof window.__WEB_YML_B64__ === "string") ? atob(window.__WEB_YML_B64__) : null;
 
   try{
     if(!web_yml) throw new Error("Workflow file missing (workflow.js not loaded).");
 
-    let step = logLine("run","Creating repository…");
-    await api("/user/repos", { method:"POST",
-      body: JSON.stringify({ name, private:false, auto_init:true,
-        description:"openFrameworks sketch, built for the web" }) });
+    // Already exists? Update it in place instead of erroring on a duplicate name.
+    let updating = false;
+    try{ await api(`/repos/${owner}/${name}`); updating = true; }
+    catch(e){ if(e.status !== 404) throw e; }
+    if(updating){
+      let ours = false;
+      try{ await api(`/repos/${owner}/${name}/contents/.github/workflows/web.yml`); ours = true; }catch(e){}
+      if(!ours) throw new Error(`You already have a repository named “${name}” that wasn't made here — pick a different name.`);
+    }
+
+    let step = logLine("run", updating ? "Updating existing project…" : "Creating repository…");
+    if(!updating){
+      await api("/user/repos", { method:"POST",
+        body: JSON.stringify({ name, private:false, auto_init:true, description: repoDesc }) });
+    } else {
+      try{ await api(`/repos/${owner}/${name}`, { method:"PATCH", body: JSON.stringify({ description: repoDesc }) }); }catch(e){}
+    }
     // Tag it so it shows up in the gallery automatically (best-effort — a token without
     // the needed access just skips this, and the sketch still publishes fine).
     try{ await api(`/repos/${owner}/${name}/topics`, { method:"PUT",
       body: JSON.stringify({ names:["of-web-sketch"] }) }); }catch(e){ /* non-fatal */ }
-    step.className="ok"; step.textContent=`Created ${owner}/${name}`;
+    step.className="ok"; step.textContent = updating ? `Updating ${owner}/${name}` : `Created ${owner}/${name}`;
 
     step = logLine("run","Turning on GitHub Pages…");
     let pagesOk = true;
@@ -657,23 +676,27 @@ async function publish(){
     // (atob already returned a byte string), corrupting the YAML — which GitHub then rejects.
     await put(".github/workflows/web.yml", window.__WEB_YML_B64__);
     await put("README.md", btoa(unescape(encodeURIComponent(studentReadme(name)))));
+    // sketch.json: metadata a curated/same-origin gallery can read (title, author, etc.)
+    await put("sketch.json", btoa(unescape(encodeURIComponent(JSON.stringify({
+      title: title || name, author: (me.name||"").trim() || me.login, authorUrl: me.html_url,
+      description: title, live: liveUrl, created: new Date().toISOString()
+    }, null, 2)))));
     for(const f of files) await put(f.path, f.b64);
 
     const newTree = await api(`/repos/${owner}/${name}/git/trees`, { method:"POST",
       body: JSON.stringify({ base_tree: baseTree, tree }) });
     const commit = await api(`/repos/${owner}/${name}/git/commits`, { method:"POST",
-      body: JSON.stringify({ message:"Add sketch + web build workflow", tree:newTree.sha, parents:[baseCommit] }) });
+      body: JSON.stringify({ message: updating ? "Update sketch" : "Add sketch + web build workflow", tree:newTree.sha, parents:[baseCommit] }) });
     await api(`/repos/${owner}/${name}/git/refs/heads/main`, { method:"PATCH",
       body: JSON.stringify({ sha:commit.sha, force:false }) });
     step.className="ok"; step.textContent=`Committed ${files.length} file${files.length!==1?"s":""} + workflow`;
 
-    logLine("ok","Build started — it takes a few minutes.");
+    logLine("ok", updating ? "Update pushed — rebuilding." : "Build started — it takes a few minutes.");
     try{ localStorage.setItem("ofUploaderHidden","1"); }catch(e){}  // hide the "publish" button on the demo
-    $("#workTitle").textContent = "✓ Your project is building!";
+    $("#workTitle").textContent = updating ? "✓ Your update is building!" : "✓ Your project is building!";
 
     const repoUrl=`https://github.com/${owner}/${name}`;
     const actionsUrl=`${repoUrl}/actions`;
-    const liveUrl=`https://${owner}.github.io/${name}/`;
     $("#links").innerHTML =
       (pagesOk ? "" :
         link("Finish setup: turn on Pages", `${repoUrl}/settings/pages`, `${repoUrl}/settings/pages`,

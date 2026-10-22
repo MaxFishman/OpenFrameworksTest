@@ -74,15 +74,21 @@
       radial-gradient(120% 120% at 100% 100%, rgba(122,162,247,.16), transparent 55%),
       var(--bg-2);
     display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}
-  .thumb .mono-badge{font-size:13px;color:var(--faint);letter-spacing:.04em;
-    border:1px solid var(--line-2);border-radius:999px;padding:7px 14px;background:rgba(11,14,20,.5);
-    display:inline-flex;align-items:center;gap:8px}
+  .thumb .thumbimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0}
+  .thumb .mono-badge{position:relative;z-index:1;font-size:13px;color:var(--ink);letter-spacing:.04em;
+    border:1px solid var(--line-2);border-radius:999px;padding:7px 14px;background:rgba(11,14,20,.62);
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+    display:inline-flex;align-items:center;gap:8px;opacity:1;transition:opacity .15s}
+  /* when a real screenshot is present, reveal the "run" badge only on hover */
+  .thumb:has(.thumbimg) .mono-badge{opacity:0}
+  .thumb:has(.thumbimg):hover .mono-badge{opacity:1}
   .thumb .mono-badge .play{color:var(--kw)}
-  .thumb iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+  .thumb iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;z-index:2}
   .thumb.loaded .mono-badge{display:none}
   .card .body{padding:14px 15px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
   .card .title{font-weight:700;font-size:15px;color:var(--ink);letter-spacing:-.01em;
     display:flex;align-items:center;gap:8px}
+  .card .slug{font-size:11px;color:var(--faint);margin-top:-3px}
   .card .by{font-size:12.5px;color:var(--muted)}
   .card .by a{color:var(--fn);text-decoration:none} .card .by a:hover{text-decoration:underline}
   .card .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
@@ -155,18 +161,26 @@ function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;"
 function card(s){
   const c = el("div","card reveal");
   const thumb = el("div","thumb");
-  thumb.innerHTML = `<span class="mono-badge"><span class="play">▶</span> run sketch</span>`;
   thumb.title = "Click to run the live sketch here";
+  if(s.thumb){                                   // show a real screenshot if one exists
+    const img = el("img","thumbimg");
+    img.loading="lazy"; img.alt=s.title||"sketch"; img.src=s.thumb;
+    img.onerror = ()=>{ img.remove(); };         // no thumbnail yet -> gradient placeholder shows
+    thumb.appendChild(img);
+  }
+  const badge = el("span","mono-badge"); badge.innerHTML = `<span class="play">▶</span> run sketch`;
+  thumb.appendChild(badge);
   thumb.addEventListener("click", ()=>{
     if(thumb.classList.contains("loaded")) return;
     const f = el("iframe"); f.src = s.live; f.loading="lazy";
     f.allow = "autoplay; fullscreen"; f.setAttribute("title", s.title||"sketch");
-    thumb.appendChild(f); thumb.classList.add("loaded");
+    thumb.innerHTML=""; thumb.appendChild(f); thumb.classList.add("loaded");
   });
   const body = el("div","body");
   const tags = (s.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join("");
   body.innerHTML =
     `<div class="title">${esc(s.title||"Untitled sketch")}</div>`+
+    (s.slug?`<div class="slug">${esc(s.slug)}</div>`:"")+
     `<div class="by">by <a href="${esc(s.authorUrl||('https://github.com/'+ (s.author||'')))}" target="_blank" rel="noopener">${esc(s.author||"someone")}</a></div>`+
     (tags?`<div class="tags">${tags}</div>`:"")+
     `<div class="row">`+
@@ -179,7 +193,9 @@ function card(s){
 
 async function loadCurated(){
   try{ const r = await fetch("sketches.json", {cache:"no-cache"}); if(!r.ok) return [];
-    const j = await r.json(); return (j.sketches||[]).map(s=>({...s})); }
+    const j = await r.json();
+    return (j.sketches||[]).map(s=>({ ...s,
+      thumb: s.thumb || (s.live ? s.live.replace(/\/?$/,"/") + "thumb.png" : null) })); }
   catch{ return []; }
 }
 
@@ -190,14 +206,24 @@ async function loadFromTopic(){
       { headers:{ "Accept":"application/vnd.github+json" } });
     if(!r.ok) return [];
     const j = await r.json();
-    return (j.items||[]).filter(it=>it.has_pages).map(it=>({
-      title: it.name,
-      author: it.owner && it.owner.login,
-      authorUrl: it.owner && it.owner.html_url,
-      repo: it.html_url,
-      live: it.homepage && /github\.io/.test(it.homepage) ? it.homepage : pagesUrl(it.owner.login, it.name),
-      tags: (it.topics||[]).filter(t=>t!==GH_TOPIC).slice(0,3)
-    }));
+    const DEFAULT_DESC = "openFrameworks sketch, built for the web";
+    return (j.items||[]).filter(it=>it.has_pages).map(it=>{
+      const live = it.homepage && /github\.io/.test(it.homepage) ? it.homepage : pagesUrl(it.owner.login, it.name);
+      const desc = (it.description||"").trim();
+      // the uploader stores the human title as "Title — openFrameworks sketch"; recover it
+      let title = it.name;
+      if(desc && desc !== DEFAULT_DESC) title = desc.replace(/\s+[—-]\s+openFrameworks sketch$/i,"").trim() || it.name;
+      return {
+        title,
+        slug: `${it.owner.login}/${it.name}`,
+        author: it.owner && it.owner.login,
+        authorUrl: it.owner && it.owner.html_url,
+        repo: it.html_url,
+        live,
+        thumb: live.replace(/\/?$/,"/") + "thumb.png",
+        tags: (it.topics||[]).filter(t=>t!==GH_TOPIC).slice(0,3)
+      };
+    });
   }catch{ return []; }
 }
 
