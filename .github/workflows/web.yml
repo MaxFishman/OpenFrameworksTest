@@ -88,7 +88,9 @@ jobs:
           # Some older addons (e.g. the liquidfun bundled inside ofxBox2d) call printf/malloc
           # without including the headers, which modern clang (C++23) rejects. Force-include the
           # C stdio/stdlib headers project-wide (valid in both C and C++) so those addons compile.
-          printf '\nPROJECT_CFLAGS = -include stdio.h -include stdlib.h -DNANOVG_GLES2_IMPLEMENTATION\n' >> of/apps/myApps/sketch/config.make
+          # -msimd128 lets the compiler auto-vectorize the sketch's own loops (a free speedup for
+          # compute-heavy sketches); WASM SIMD is supported in all current browsers.
+          printf '\nPROJECT_CFLAGS = -include stdio.h -include stdlib.h -DNANOVG_GLES2_IMPLEMENTATION -msimd128\n' >> of/apps/myApps/sketch/config.make
           # Auto-include openFrameworks addons the sketch #includes (e.g. ofxGui), so common
           # addon-based sketches build with no manual setup. Only addons that ship with
           # openFrameworks (present in of/addons) are added — a bundled addon whose header the

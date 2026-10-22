@@ -249,6 +249,18 @@
             <li><b>Assets load relative to <code>bin/data/</code></b> — e.g. <code>img.load("photo.png")</code>.</li>
             <li><b>Don't block the main thread.</b> No infinite loops — the browser needs each frame to breathe.</li>
             <li><b>Handle resize.</b> The canvas can change size; re-allocate FBOs in <code>windowResized()</code>.</li>
+            <li><b>Make motion framerate-independent</b> — the single biggest "runs differently on the web"
+              fix. Scale movement by <b>delta time</b> (<code>ofGetLastFrameTime()</code>), not a fixed amount
+              per frame: <code>pos += vel * 300 * dt;</code> (pixels/second) stays consistent, whereas
+              <code>pos += 5;</code> (pixels/frame) speeds up or slows down whenever the frame rate changes —
+              and it varies more on the web.</li>
+            <li><b>Shaders must be GLSL&nbsp;ES.</b> The web uses WebGL (GLES), not desktop GL. Add
+              <code>precision highp float;</code>, use <code>attribute</code>/<code>varying</code>, and oF's
+              <code>modelViewProjectionMatrix</code> + <code>position</code>. Desktop shaders
+              (<code>#version 150</code>) won't compile — copy the <b>shader</b> starter template.</li>
+            <li><b>Audio &amp; camera need a user gesture.</b> Browsers only start sound and grant camera/mic
+              after the viewer clicks or allows — they won't just start in <code>setup()</code>. Expect a
+              permission prompt, and design so the sketch still looks alive before it's granted.</li>
           </ul>
         </section>
 
