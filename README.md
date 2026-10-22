@@ -85,7 +85,7 @@ Setting up the template by hand is fine, but there's an even shorter path: the
 %%{init: {'theme':'base','themeVariables':{'fontFamily':'ui-monospace, SFMono-Regular, Menlo, monospace','primaryColor':'#11151e','primaryTextColor':'#d8e0ee','primaryBorderColor':'#2e3749','lineColor':'#7aa2f7','secondaryColor':'#161b26','tertiaryColor':'#0e121b','clusterBkg':'#0e121b','clusterBorder':'#232a37','mainBkg':'#11151e'}}}%%
 flowchart TD
   U1["🔑 Paste a GitHub token"]:::you
-  U2["📁 Drop in your src/<br/>(a folder, a .zip, or loose files)"]:::you
+  U2["📁 Drop in a .zip of your project<br/>(src/ + bin/data/ inside)"]:::you
   U3["▶️ Click “Create my project”"]:::you
   subgraph BR["🖥️  The uploader — runs entirely in YOUR browser"]
     direction TB
@@ -169,8 +169,8 @@ flowchart LR
 ### Option A — Use the web uploader (easiest, no setup)
 
 Open the [**web uploader**](https://maxfishman.github.io/OpenFrameworksTest/uploader/),
-paste a GitHub token, drop in your `src/` (a folder, a `.zip`, or loose files), and
-click **Create my project**. It makes the repo, adds the workflow, and turns on Pages
+paste a GitHub token, drop in a `.zip` of your project (with `src/` and `bin/data/`
+inside), and click **Create my project**. It makes the repo, adds the workflow, and turns on Pages
 for you. See [Publish in one click](#-publish-in-one-click-the-web-uploader) above.
 
 ### Option B — Use this repo as a template
