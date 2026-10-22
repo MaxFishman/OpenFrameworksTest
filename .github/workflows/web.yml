@@ -113,10 +113,8 @@ jobs:
           # failed clone just skips that addon (the #include then errors, as it would anyway).
           REGISTRY="ofxBox2d|https://github.com/vanderlin/ofxBox2d
           ofxFft|https://github.com/kylemcdonald/ofxFft
-          ofxDatGui|https://github.com/braitsch/ofxDatGui
           ofxAnimatable|https://github.com/armadillu/ofxAnimatable
-          ofxEasing|https://github.com/arturoc/ofxEasing
-          ofxPostProcessing|https://github.com/neilmendoza/ofxPostProcessing"
+          ofxEasing|https://github.com/arturoc/ofxEasing"
           if [ -n "$SKETCH_INCS" ]; then
             printf '%s\n' "$REGISTRY" | while IFS='|' read -r aname aurl; do
               aname=$(printf '%s' "$aname" | tr -d '[:space:]'); aurl=$(printf '%s' "$aurl" | tr -d '[:space:]')
