@@ -323,9 +323,10 @@ you don't write an `addons.make`:
   `ofxXmlSettings`, `ofxSvg`, `ofxVectorGraphics`, …) are added automatically when the
   sketch references them.
 - **Popular third-party addons** are cloned at build time from a small registry in
-  `web.yml` (the **“Set up the sketch project”** step): `ofxBox2d`, `ofxFft`, `ofxDatGui`,
-  `ofxAnimatable`, `ofxEasing`, `ofxPostProcessing`. To support another, add a
-  `name|git-repo` line to that `REGISTRY` list.
+  `web.yml` (the **“Set up the sketch project”** step) — each **build-verified on the web**:
+  `ofxBox2d`, `ofxFft`, `ofxAnimatable`, `ofxEasing`, `ofxDelaunay`, `ofxVoronoi`,
+  `ofxFontStash2`. To support another, add a `name|git-repo` line to that `REGISTRY` list
+  (and verify it actually builds — some addons use desktop-only GL or native libraries).
 
 **Not everything can run in a browser.** Sketches compile to WebAssembly, so addons that
 need native libraries, hardware, or raw sockets won't work — notably **`ofxOpenCv`**

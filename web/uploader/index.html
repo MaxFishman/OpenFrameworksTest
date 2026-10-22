@@ -655,12 +655,14 @@ function renderFiles(){
     //  INCOMPAT = can't run in a browser (native libs / hardware / UDP sockets)
     //  anything else = unknown third-party addon (may need manual setup)
     const AUTO=["ofxEmscripten","ofxGui","ofxXmlSettings","ofxSvg","ofxVectorGraphics","ofxThreadedImageLoader",
-      "ofxBox2d","ofxFft","ofxAnimatable","ofxEasing"];
+      "ofxBox2d","ofxFft","ofxAnimatable","ofxEasing","ofxDelaunay","ofxVoronoi","ofxFontStash2"];
     const INCOMPAT={ofxOpenCv:"OpenCV isn't available for WebAssembly", ofxCv:"depends on OpenCV",
       ofxKinect:"needs Kinect hardware", ofxNetwork:"TCP/UDP sockets don't work in the browser",
       ofxOsc:"OSC uses UDP, which browsers can't send", ofxPoco:"the Poco library isn't built for the web",
       ofxDatGui:"built for the desktop GLFW window — use ofxGui instead (bundled)",
-      ofxPostProcessing:"uses legacy immediate-mode OpenGL that WebGL doesn't support"};
+      ofxPostProcessing:"uses legacy immediate-mode OpenGL that WebGL doesn't support",
+      ofxImGui:"this version isn't compatible with openFrameworks 0.12 on the web",
+      ofxFlowTools:"non-portable code and desktop-GL shaders that don't build for the web"};
     const used=new Set();
     for(const f of files){
       if(!/\.(cpp|h|hpp|cc|cxx|c|hh)$/i.test(f.path)) continue;

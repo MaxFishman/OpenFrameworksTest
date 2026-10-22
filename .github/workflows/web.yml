@@ -88,7 +88,7 @@ jobs:
           # Some older addons (e.g. the liquidfun bundled inside ofxBox2d) call printf/malloc
           # without including the headers, which modern clang (C++23) rejects. Force-include the
           # C stdio/stdlib headers project-wide (valid in both C and C++) so those addons compile.
-          printf '\nPROJECT_CFLAGS = -include stdio.h -include stdlib.h\n' >> of/apps/myApps/sketch/config.make
+          printf '\nPROJECT_CFLAGS = -include stdio.h -include stdlib.h -DNANOVG_GLES2_IMPLEMENTATION\n' >> of/apps/myApps/sketch/config.make
           # Auto-include openFrameworks addons the sketch #includes (e.g. ofxGui), so common
           # addon-based sketches build with no manual setup. Only addons that ship with
           # openFrameworks (present in of/addons) are added — a bundled addon whose header the
@@ -116,7 +116,10 @@ jobs:
           REGISTRY="ofxBox2d|https://github.com/vanderlin/ofxBox2d
           ofxFft|https://github.com/kylemcdonald/ofxFft
           ofxAnimatable|https://github.com/armadillu/ofxAnimatable
-          ofxEasing|https://github.com/arturoc/ofxEasing"
+          ofxEasing|https://github.com/arturoc/ofxEasing
+          ofxDelaunay|https://github.com/obviousjim/ofxDelaunay
+          ofxVoronoi|https://github.com/madc/ofxVoronoi
+          ofxFontStash2|https://github.com/armadillu/ofxFontStash2"
           if [ -n "$SKETCH_INCS" ] || [ -n "$WANTED" ]; then
             printf '%s\n' "$REGISTRY" | while IFS='|' read -r aname aurl; do
               aname=$(printf '%s' "$aname" | tr -d '[:space:]'); aurl=$(printf '%s' "$aurl" | tr -d '[:space:]')

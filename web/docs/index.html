@@ -268,6 +268,8 @@
               <tr><td><b>GUI / sliders</b></td><td><code>ofxGui</code> (bundled).</td></tr>
               <tr><td><b>Physics</b></td><td><code>ofxBox2d</code> (auto-cloned).</td></tr>
               <tr><td><b>Motion / tweening</b></td><td><code>ofxAnimatable</code>, <code>ofxEasing</code> (auto-cloned).</td></tr>
+              <tr><td><b>Generative geometry</b></td><td><code>ofxDelaunay</code>, <code>ofxVoronoi</code> (auto-cloned).</td></tr>
+              <tr><td><b>Typography</b></td><td><code>ofxFontStash2</code> (auto-cloned).</td></tr>
             </tbody>
           </table>
 
@@ -278,6 +280,7 @@
               <tr><td><code>ofxOpenCv</code> / <code>ofxCv</code></td><td>OpenCV isn't built for WebAssembly. For simple vision, process <code>ofVideoGrabber</code> pixels yourself.</td></tr>
               <tr><td><code>ofxDatGui</code></td><td>Hard-wired to the desktop window. Use <b><code>ofxGui</code></b> instead.</td></tr>
               <tr><td><code>ofxPostProcessing</code></td><td>Uses legacy immediate-mode OpenGL. Write effects as your own GLSL shaders on an FBO.</td></tr>
+              <tr><td><code>ofxImGui</code>, <code>ofxFlowTools</code></td><td>Version drift / desktop-GL shaders that don't build here. Use <code>ofxGui</code>; write shader effects yourself.</td></tr>
               <tr><td><code>ofxKinect</code>, serial, MIDI (<code>ofxMidi</code>)</td><td>Need hardware / native drivers the browser can't reach.</td></tr>
               <tr><td><code>ofxNetwork</code>, <code>ofxOsc</code></td><td>Use TCP/UDP sockets; browsers only allow WebSockets.</td></tr>
             </tbody>
