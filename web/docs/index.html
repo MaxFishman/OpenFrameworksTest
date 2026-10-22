@@ -138,9 +138,10 @@
         <a href="#start"><span class="n">04</span>Quick start</a>
         <a href="#pages"><span class="n">05</span>Enable Pages</a>
         <a href="#webcode"><span class="n">06</span>Code for the web</a>
-        <a href="#workflow"><span class="n">07</span>The workflow</a>
-        <a href="#trouble"><span class="n">08</span>Troubleshooting</a>
-        <a href="#faq"><span class="n">09</span>FAQ</a>
+        <a href="#support"><span class="n">07</span>What works on the web</a>
+        <a href="#workflow"><span class="n">08</span>The workflow</a>
+        <a href="#trouble"><span class="n">09</span>Troubleshooting</a>
+        <a href="#faq"><span class="n">10</span>FAQ</a>
       </nav>
       <main>
         <div class="hero">
@@ -249,6 +250,41 @@
             <li><b>Don't block the main thread.</b> No infinite loops — the browser needs each frame to breathe.</li>
             <li><b>Handle resize.</b> The canvas can change size; re-allocate FBOs in <code>windowResized()</code>.</li>
           </ul>
+        </section>
+
+        <section id="support">
+          <h2><span class="hash">#</span>What works on the web</h2>
+          <p>Your sketch runs as <b>WebAssembly in a browser sandbox</b>, so anything needing native
+            libraries, hardware, or raw sockets can't run. Here's what's verified — pick compatible
+            approaches from the start, and the uploader's pre-flight check will flag the rest.</p>
+
+          <h3 style="color:var(--str)">✓ Works</h3>
+          <table>
+            <thead><tr><th>Feature</th><th>How</th></tr></thead>
+            <tbody>
+              <tr><td>Graphics, images, FBOs, <b>shaders</b>, 3D, <code>ofEasyCam</code></td><td>Core openFrameworks — all fine.</td></tr>
+              <tr><td><b>Webcam</b></td><td><code>ofVideoGrabber</code> — the browser asks the viewer for camera permission.</td></tr>
+              <tr><td><b>Microphone / audio</b></td><td><code>ofSoundStream</code> (input &amp; output); pair with <code>ofxFft</code> for audio-reactive work.</td></tr>
+              <tr><td><b>GUI / sliders</b></td><td><code>ofxGui</code> (bundled).</td></tr>
+              <tr><td><b>Physics</b></td><td><code>ofxBox2d</code> (auto-cloned).</td></tr>
+              <tr><td><b>Motion / tweening</b></td><td><code>ofxAnimatable</code>, <code>ofxEasing</code> (auto-cloned).</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="color:var(--kw)">✗ Doesn't work in a browser</h3>
+          <table>
+            <thead><tr><th>Addon / feature</th><th>Why — and what to use instead</th></tr></thead>
+            <tbody>
+              <tr><td><code>ofxOpenCv</code> / <code>ofxCv</code></td><td>OpenCV isn't built for WebAssembly. For simple vision, process <code>ofVideoGrabber</code> pixels yourself.</td></tr>
+              <tr><td><code>ofxDatGui</code></td><td>Hard-wired to the desktop window. Use <b><code>ofxGui</code></b> instead.</td></tr>
+              <tr><td><code>ofxPostProcessing</code></td><td>Uses legacy immediate-mode OpenGL. Write effects as your own GLSL shaders on an FBO.</td></tr>
+              <tr><td><code>ofxKinect</code>, serial, MIDI (<code>ofxMidi</code>)</td><td>Need hardware / native drivers the browser can't reach.</td></tr>
+              <tr><td><code>ofxNetwork</code>, <code>ofxOsc</code></td><td>Use TCP/UDP sockets; browsers only allow WebSockets.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout"><b>Permissions &amp; limits.</b> Webcam and mic prompt the viewer for permission
+            the first time, and only start after a click (browser rule). There's no raw file system — load
+            assets from <code>bin/data/</code>.</div>
         </section>
 
         <section id="workflow">

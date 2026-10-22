@@ -665,7 +665,8 @@ function renderFiles(){
       row("ok", `${dataCount} data file${dataCount!==1?"s":""} → bin/data/`)+
       (autoUsed.size ? row("ok", `addons handled automatically: ${esc([...autoUsed].join(", "))}`) : "")+
       (incompatUsed.size ? row("bad", `won't run in a browser: ${esc([...incompatUsed].map(([k,v])=>`${k} (${v})`).join("; "))}`) : "")+
-      (unknownUsed.size ? row("warn", `addon(s) not recognized: ${esc([...unknownUsed].join(", "))} — may need manual setup and might not build`) : "");
+      (unknownUsed.size ? row("warn", `addon(s) not recognized: ${esc([...unknownUsed].join(", "))} — may need manual setup and might not build`) : "")+
+      ((incompatUsed.size||unknownUsed.size) ? `<div class="pf-row" style="color:var(--fn)">→ <a href="../docs/#support" target="_blank" rel="noopener" style="color:var(--fn)">what works on the web</a></div>` : "");
   } else pf.classList.add("hidden");
   const note=$("#skipNote");
   if(skipped.length){ note.classList.remove("hidden");
