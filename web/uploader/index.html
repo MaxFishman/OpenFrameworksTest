@@ -185,6 +185,7 @@
     border:1px solid var(--line-2)}
   .files .tag.src{color:var(--fn);border-color:rgba(122,162,247,.4)}
   .files .tag.data{color:var(--num);border-color:rgba(255,158,100,.4)}
+  .files .tag.config{color:var(--str);border-color:rgba(158,206,106,.4)}
   .files .rm{margin-left:4px;background:none;border:0;color:var(--faint);padding:2px 6px;font-size:16px;line-height:1}
   .files .rm:hover{color:var(--kw)}
 
@@ -228,6 +229,18 @@
   .share .qr{background:#fff;padding:10px;border-radius:10px;line-height:0;flex:none}
   .share .qr svg{display:block;width:132px;height:132px}
   .share .qrhint{font-size:12.5px;color:var(--muted);font-family:var(--sans);line-height:1.5}
+  /* start-from-an-example */
+  .examples{margin:0 0 16px}
+  .ex-label{font-size:12px;color:var(--cmt);margin:0 0 10px}
+  .ex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px}
+  .ex-card{text-align:left;cursor:pointer;border:1px solid var(--line-2);border-radius:10px;background:var(--panel-2);
+    padding:11px 12px;transition:border-color .15s,transform .05s;font:inherit}
+  .ex-card:hover{border-color:var(--kw)} .ex-card:active{transform:translateY(1px)}
+  .ex-card .t{font-weight:700;font-size:13.5px;color:var(--ink)}
+  .ex-card .d{font-size:11.5px;color:var(--muted);margin-top:3px;font-family:var(--sans);line-height:1.4}
+  .ex-card .a{font-size:10.5px;color:var(--str);margin-top:5px;font-family:var(--mono)}
+  .ex-divider{display:flex;align-items:center;gap:10px;margin:16px 0 4px;color:var(--faint);font-size:11.5px}
+  .ex-divider::before,.ex-divider::after{content:"";flex:1;height:1px;background:var(--line)}
   /* my sketches manager */
   .mine-item{display:flex;align-items:center;justify-content:space-between;gap:12px;
     border:1px solid var(--line);border-radius:10px;background:var(--panel-2);padding:11px 13px;margin-top:8px}
@@ -354,6 +367,11 @@
         <h2 class="pane-title">Upload your project</h2>
         <p class="pane-sub">Drop a <span class="scope">.zip</span> of your openFrameworks project. Inside the zip,
           code routes to <span class="scope">src/</span> and assets to <span class="scope">bin/data/</span>, automatically.</p>
+        <div class="examples hidden" id="examples">
+          <p class="ex-label">// start from an example</p>
+          <div class="ex-grid" id="exGrid"></div>
+          <div class="ex-divider"><span>or upload your own</span></div>
+        </div>
         <div class="drop" id="dropSrc">
           <strong>Drop your project <span class="s">.zip</span> here</strong>
           <span class="sub">a zip of your sketch folder — with <span class="s">src/</span> (and <span class="s">bin/data/</span>) inside</span>
@@ -518,6 +536,7 @@ function mapToRepoPath(relPath, forceKind){
   let p = String(relPath||"").replace(/\\/g,"/").replace(/^\/+/,"");
   if(!p || JUNK.test(p)) return null;
   let m;
+  if(/(?:^|\/)addons\.make$/i.test(p)) return "addons.make";   // let students declare addons
   if(forceKind==="data"){
     m = p.match(/(?:^|\/)bin\/data\/(.+)$/i);
     return "bin/data/" + (m ? m[1] : p.split("/").pop());
@@ -531,7 +550,7 @@ function mapToRepoPath(relPath, forceKind){
   return null;                                      // unknown project file
 }
 function pushFile(path, b64){
-  const kind = path.startsWith("src/") ? "src" : "data";
+  const kind = path.startsWith("src/") ? "src" : (path === "addons.make" ? "config" : "data");
   const i = files.findIndex(x=>x.path===path);
   if(i>=0) files[i].b64 = b64; else files.push({ path, b64, kind });
 }
@@ -994,6 +1013,39 @@ function onZipDrop(e){
   }
   addZips(zips);
 }
+
+/* ---------- start from an example ---------- */
+async function loadTemplates(){
+  try{
+    const r = await fetch("../templates/index.json", {cache:"no-cache"});
+    if(!r.ok) return;                                  // templates not deployed (e.g. dev) → stay hidden
+    const j = await r.json();
+    const list = j.templates || [];
+    if(!list.length) return;
+    const grid = $("#exGrid"); grid.innerHTML = "";
+    for(const t of list){
+      const b = document.createElement("button"); b.type="button"; b.className="ex-card";
+      b.innerHTML = `<div class="t">${esc(t.title||t.id)}</div><div class="d">${esc(t.desc||"")}</div>`+
+        ((t.addons&&t.addons.length)?`<div class="a">${esc(t.addons.join(" · "))}</div>`:"");
+      b.onclick = ()=>useTemplate(t);
+      grid.appendChild(b);
+    }
+    $("#examples").classList.remove("hidden");
+  }catch(e){ /* no templates → silently skip */ }
+}
+async function useTemplate(t){
+  zipErr(""); files.length=0; skipped.length=0;
+  try{
+    const r = await fetch(`../templates/${encodeURIComponent(t.id)}.zip`, {cache:"no-cache"});
+    if(!r.ok) throw new Error("load failed");
+    const blob = await r.blob();
+    const file = new File([blob], t.id + ".zip", {type:"application/zip"});
+    await addZips([file]);                             // extracts into files[] + renders
+    if($("#sketchTitle") && !$("#sketchTitle").value.trim()) $("#sketchTitle").value = t.title || t.id;
+    const rn = $("#repoName");
+    if(rn && (!rn.value.trim() || rn.value.trim()==="my-of-sketch")){ rn.value = sanitizeName(t.id); updateUrlPreview(); }
+  }catch(e){ zipErr("Couldn't load that example — try again."); }
+}
 window.addEventListener("DOMContentLoaded", async ()=>{
   $("#signOut").onclick=signOut;
   $("#mineBtn").onclick=showMine;
@@ -1013,6 +1065,7 @@ window.addEventListener("DOMContentLoaded", async ()=>{
   $("#tokenGo").onclick=connectToken;
   $("#tokenInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); connectToken(); } });
   $("#repoName").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); showPane("files"); } });
+  loadTemplates();
   await render();
 });
 </script>

@@ -1,0 +1,11 @@
+{
+  "comment": "Starter templates offered by the uploader. Each id maps to web/templates/<id>/, which is zipped at deploy time to templates/<id>.zip.",
+  "templates": [
+    { "id": "particles",      "title": "Particle field",     "desc": "A bouncing particle system. Click to add more.",          "addons": [] },
+    { "id": "physics",        "title": "Physics",             "desc": "Circles that fall and collide. Click to drop more.",      "addons": ["ofxBox2d"] },
+    { "id": "audio-reactive", "title": "Audio-reactive",      "desc": "Live microphone input drawn as a spectrum.",              "addons": ["ofxFft"] },
+    { "id": "webcam",         "title": "Webcam",              "desc": "Your camera, mirrored to fill the screen.",               "addons": [] },
+    { "id": "gui",            "title": "GUI controls",        "desc": "Sliders (ofxGui) driving a generative pattern.",          "addons": ["ofxGui"] },
+    { "id": "shader",         "title": "GLSL shader",         "desc": "A fullscreen fragment shader you can edit.",              "addons": [] }
+  ]
+}
