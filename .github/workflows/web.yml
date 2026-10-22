@@ -78,9 +78,17 @@ jobs:
             if (size != 0 && nmemb > SIZE_MAX / size) { errno = ENOMEM; return NULL; }
             return realloc(ptr, nmemb * size);
           }
+          /* Desktop-only GL calls that WebGL/GLES omits — no-op stubs so addons that use them
+             (e.g. ofxBox2d's debug draw calls glPointSize) still link. Point size on the web is
+             set in shaders, so a no-op is harmless. */
+          void glPointSize(float size) { (void)size; }
           EOF
           cp of/scripts/templates/emscripten/Makefile of/apps/myApps/sketch/
           cp of/scripts/templates/emscripten/config.make of/apps/myApps/sketch/
+          # Some older addons (e.g. the liquidfun bundled inside ofxBox2d) call printf/malloc
+          # without including the headers, which modern clang (C++23) rejects. Force-include the
+          # C stdio/stdlib headers project-wide (valid in both C and C++) so those addons compile.
+          printf '\nPROJECT_CFLAGS = -include stdio.h -include stdlib.h\n' >> of/apps/myApps/sketch/config.make
           # Auto-include openFrameworks addons the sketch #includes (e.g. ofxGui), so common
           # addon-based sketches build with no manual setup. Only addons that ship with
           # openFrameworks (present in of/addons) are added — a bundled addon whose header the
